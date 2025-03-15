@@ -2,7 +2,9 @@
 export default {
     content: ["./src/**/*.{svelte,js,ts,jsx,tsx}"],
     theme: {
-        extend: {},
+        extend: {
+    
+        },
     },
     plugins: [],
     // HACK: HMR doesn't work for Tailwind classes in content scripts
