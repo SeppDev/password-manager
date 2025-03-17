@@ -3,8 +3,6 @@
 
     const { test } = $props();
 
-    test();
-
     let page: "loading" | "home" = $state("loading");
 
     setTimeout(() => {
@@ -31,6 +29,5 @@
 {#snippet Home()}
     <div class="flex items-center justify-center w-full h-full m-8">
         <input type="text" class="w-full">
-
     </div>
 {/snippet}
