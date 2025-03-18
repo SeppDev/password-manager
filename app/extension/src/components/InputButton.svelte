@@ -24,14 +24,14 @@
     }, 5);
 </script>
 
-<div class="w-full h-full" style="z-index: 100;">
+<div class="w-full h-full z-100">
     <style>
         @import "tailwindcss";
     </style>
 
     <button
         onclick={(event) => clicked(event.currentTarget)}
-        class="w-full h-full rounded-full cursor-pointer bg-blue-950 hover:outline-2 hover:outline-blue-600"
+        class="w-full h-full rounded-full cursor-pointer bg-indigo-950 hover:outline-2 hover:outline-indigo-600"
         aria-label=" "
     >
         <LockIcon />
@@ -40,7 +40,7 @@
     <div class="h-1"></div>
 
     {#if visible}
-        <div class="absolute right-0 bg-blue-950 min-w-50 min-h-20 rounded-xl">
+        <div class="absolute right-0 bg-indigo-950 min-w-50 min-h-20 rounded-xl">
             {#if page === "loading"}
                 <div class="flex items-center justify-center h-20">
                     <div class="h-8">
