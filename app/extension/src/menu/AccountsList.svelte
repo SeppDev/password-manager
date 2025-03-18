@@ -1,8 +1,5 @@
 <script lang="ts">
-    type Account = {
-      username: string | undefined,
-      email: string | undefined
-    }
+    import type { Account } from "../types/Account.ts";
 
     const { accounts, selected }: {
       accounts: string[],
@@ -19,7 +16,7 @@
         {#each accounts as account}
             <button
                 onclick={() => selected(account)}
-                class="h-10 text-base font-bold text-white duration-200 border-none cursor-pointer bg-none hover:bg-blue-700"
+                class="h-10 text-base font-bold text-white duration-200 border-none cursor-pointer bg-none hover:bg-indigo-800"
                 ><p class="ml-5 text-left">{account}</p></button
             >
         {/each}

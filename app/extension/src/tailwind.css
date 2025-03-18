@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+@tailwind utilities;
+
 @theme {
-    --color-primary-950: rgb(11, 9, 10)
+    --color-primary-950: rgb(11, 9, 10);
+}
+
+@layer utilities {
+    .scrollbar::-webkit-scrollbar {
+        width: 20px;
+        height: 20px;
+    }
+
+    .scrollbar::-webkit-scrollbar-track {
+        border-radius: 100vh;
+        background: #f7f4ed;
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb {
+        background: #e0cbcb;
+        border-radius: 100vh;
+        border: 3px solid #f6f7ed;
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #c0a0b9;
+    }
+}
+
+div {
+  scrollbar-color: var(--color-indigo-600) var(--color-indigo-900);
 }
