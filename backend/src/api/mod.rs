@@ -10,77 +10,76 @@
 // }
 
 use crate::database::Database;
-use bcrypt::{DEFAULT_COST, hash};
-use rocket::{Request, State, request::FromRequest};
+use rocket::{
+    Request, State,
+    http::Status,
+    request::{FromRequest, Outcome},
+};
 use serde::{Deserialize, Serialize};
-use tokio_rusqlite::Result;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct User {
-    id: usize,
-    name: String,
-    password: String,
+
+
+pub struct SingupCreds<'a> {
+    username: &'a str,
+    password: &'a str,
 }
 
-impl Database {
-    async fn create_account(&self, name: String, password: String) -> Result<()> {
-        self.conn
-            .call(move |conn| {
-                let password_hash = hash(password, DEFAULT_COST).unwrap();
+#[derive(Debug)]
+pub enum SignupError {
+    InvalidHeaders,
+    DuplicateUsername,
+}
 
-                conn.execute(
-                    "INSERT INTO users (name, password) VALUES (?1, ?2)",
-                    (&name, &password_hash),
-                )?;
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for SingupCreds<'r> {
+    type Error = SignupError;
 
-                Ok(())
-            })
-            .await
-    }
-    async fn fetch_users(&self) -> Result<Vec<User>> {
-        self.conn
-            .call(|conn| {
-                let mut stmt = conn.prepare("SELECT id, name, password FROM users")?;
-                let person_iter = stmt.query_map([], |row| {
-                    Ok(User {
-                        id: row.get(0).unwrap(),
-                        name: row.get(1).unwrap(),
-                        password: row.get(2).unwrap(),
-                    })
-                })?;
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let headers = req.headers();
+        let username = headers.get_one("username");
+        let password = headers.get_one("password");
 
-                // let users = person_iter.collect();
+        let (username, password) = match (username, password) {
+            (Some(n), Some(p)) => (n, p),
+            _ => return Outcome::Error((Status::BadRequest, SignupError::InvalidHeaders)),
+        };
 
-                let mut users = Vec::new();
-
-                for user in person_iter {
-                    // println!("Found person {:?}", person?);
-                    users.push(user?);
-                }
-
-                Ok(users)
-            })
-            .await
+        Outcome::Success(SingupCreds { username, password })
     }
 }
 
-enum SignupState {
-    Creds { username: String, password: String },
-    None,
-}
-impl<'a, 'r> FromRequest<'a> for SignupState {
-    type Error = ();
-
-    
+#[derive(Serialize, Deserialize)]
+enum ApiResponse {
+    Message { message: &'static str },
 }
 
-#[get("/signup")]
-pub async fn signup<'r>(db: &State<Database>, state: SignupState) -> String {
+#[post("/signup")]
+pub async fn signup<'r>(
+    db: &State<Database>,
+    creds: SingupCreds<'r>,
+) -> Result<&'static str, &'static str> {
     let result = db
-        .create_account("cool".to_string(), "password123".to_string())
+        .create_account(creds.username.into(), creds.password.into())
         .await;
 
-    format!("Result: {result:#?}")
+    if result.is_err() {
+        return Err("Failed to create account");
+    }
+
+    return Ok("Successfully created account");
+}
+
+#[get("/login")]
+pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> String {
+    let result = db
+        .create_account(creds.username.into(), creds.password.into())
+        .await;
+
+    let response = ApiResponse::Message {
+        message: "Successfully created account",
+    };
+
+    serde_json::to_string(&response).unwrap()
 }
 
 #[get("/users")]
