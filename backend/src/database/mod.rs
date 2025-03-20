@@ -1,5 +1,5 @@
+use mysql_async::Result;
 use std::path::Path;
-use tokio_rusqlite::{Connection, Result};
 
 mod accounts;
 mod init;

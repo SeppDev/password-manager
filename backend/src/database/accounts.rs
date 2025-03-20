@@ -11,7 +11,7 @@ pub struct User {
 }
 
 impl Database {
-    pub async fn create_account(&self, name: String, password: String) -> tokio_rusqlite::Result<()> {
+    pub async fn create_account(&self, name: String, password: String) -> mysql_async::Result<()> {
         self.conn
             .call(move |conn| {
                 let password_hash = bcrypt::hash(password, DEFAULT_COST).unwrap();
@@ -25,7 +25,7 @@ impl Database {
             })
             .await
     }
-    pub async fn fetch_users(&self) -> tokio_rusqlite::Result<Vec<User>> {
+    pub async fn fetch_users(&self) -> mysql_async::Result<Vec<User>> {
         self.conn
             .call(|conn| {
                 let mut stmt = conn.prepare("SELECT id, name, password FROM users")?;

@@ -1,5 +1,5 @@
 import { mount } from "svelte";
-import InputButton from "../components/InputButton.svelte";
+import InputButton from "../../src/components/InputButton.svelte";
 
 const id = "PASSWORD_MANAGER";
 

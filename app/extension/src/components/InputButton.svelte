@@ -2,8 +2,8 @@
     import Loader from "./Loader.svelte";
     import LockIcon from "../assets/LockIcon.svelte";
     import AccountsList from "../menu/AccountsList.svelte";
-
     import { FillAccount, Submit } from "../content/FillForm";
+    
     type Page = "loading" | "notsigned" | "home";
 
     let visible = $state(true);

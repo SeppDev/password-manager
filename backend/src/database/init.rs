@@ -15,7 +15,7 @@ impl Database {
                 // )?;
 
                 conn.execute(
-                    "CREATE TABLE users (
+                    "CREATE TABLE IF NOT EXISTS users (
                 id   INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
@@ -25,7 +25,7 @@ impl Database {
                 )?;
 
                 conn.execute(
-                    "CREATE TABLE sessions (
+                    "CREATE TABLE IF NOT EXISTS sessions (
                 token TEXT NOT NULL PRIMARY KEY,
                 expires_at DATETIME NOT NULL,
                 user_id INTEGER NOT NULL,

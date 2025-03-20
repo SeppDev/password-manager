@@ -7,7 +7,7 @@
     import type { Account } from "../types/Account.ts";
     import EllipsisVertical from "../assets/EllipsisVertical.svelte";
 
-    const { test } = $props();
+    const { loginPage } = $props();
 
     let page: "loading" | "home" = $state("loading");
 
@@ -25,7 +25,7 @@
 
         accounts.push(account);
     }
-
+    
     activeAccount = accounts[0];
 
     setTimeout(() => {
@@ -51,6 +51,7 @@
 
 {#snippet Home()}
     <div class="flex flex-col w-auto h-auto">
+        <button onclick={loginPage}>Login</button>
         <Topbar />
         <Acounts />
     </div>
