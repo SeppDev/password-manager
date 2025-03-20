@@ -17,8 +17,6 @@ use rocket::{
 };
 use serde::{Deserialize, Serialize};
 
-
-
 pub struct SingupCreds<'a> {
     username: &'a str,
     password: &'a str,
@@ -27,7 +25,6 @@ pub struct SingupCreds<'a> {
 #[derive(Debug)]
 pub enum SignupError {
     InvalidHeaders,
-    DuplicateUsername,
 }
 
 #[rocket::async_trait]
@@ -69,22 +66,22 @@ pub async fn signup<'r>(
     return Ok("Successfully created account");
 }
 
-#[get("/login")]
-pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> String {
-    let result = db
-        .create_account(creds.username.into(), creds.password.into())
-        .await;
+// #[get("/login")]
+// pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> String {
+//     let result = db
+//         .create_account(creds.username.into(), creds.password.into())
+//         .await;
 
-    let response = ApiResponse::Message {
-        message: "Successfully created account",
-    };
+//     let response = ApiResponse::Message {
+//         message: "Successfully created account",
+//     };
 
-    serde_json::to_string(&response).unwrap()
-}
+//     serde_json::to_string(&response).unwrap()
+// }
 
 #[get("/users")]
 pub async fn fetch_users(db: &State<Database>) -> String {
-    let result = db.fetch_users().await;
+    let result = db.fetch_users().await.unwrap();
 
-    format!("{result:#?}")
+    serde_json::to_string(&result).unwrap()
 }

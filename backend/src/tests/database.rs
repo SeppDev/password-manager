@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::database::Database;
-    use tokio_rusqlite::Result;
+    use sqlx::Result;
     use tokio::runtime::Runtime;
 
     const PASSWORD: &str = "password123";

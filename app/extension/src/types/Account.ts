@@ -1,7 +1,7 @@
 export interface Account {
     Title: String,
-    Email: String | undefined,
-    Username: String | undefined,
-    Password: String | undefined,
+    Email?: String,
+    Username?: String,
+    Password?: String,
     URLs: Array<String>
 }
