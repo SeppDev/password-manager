@@ -22,8 +22,8 @@ pub mod db {
 
 use db::*;
 
-mod accounts;
-mod init;
+pub mod accounts;
+pub mod init;
 
 pub struct Database {
     pub pool: DBPool,

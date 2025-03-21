@@ -14,5 +14,5 @@ async fn rocket() -> _ {
 
     rocket::build()
         .manage(db)
-        .mount("/api", routes![api::signup, api::fetch_users])
+        .mount("/api", routes![api::signup, api::login, api::fetch_users])
 }

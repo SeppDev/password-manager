@@ -22,14 +22,14 @@ mod tests {
     fn account_creation() {
         let rt = Runtime::new().unwrap();
         let db = rt.block_on(create_database()).unwrap();
-        rt.block_on(db.create_account("John".into(), PASSWORD.into())).unwrap();
+        rt.block_on(db.create_account(&"John".into(), &PASSWORD.into())).unwrap();
     }
 
     #[test]
     fn account_creation_same_username() {
         let rt = Runtime::new().unwrap();
         let db = rt.block_on(create_database()).unwrap();
-        rt.block_on(db.create_account("John".into(), PASSWORD.into())).unwrap();
-        rt.block_on(db.create_account("John".into(), PASSWORD.into())).unwrap_err();
+        rt.block_on(db.create_account(&"John".into(), &PASSWORD.into())).unwrap();
+        rt.block_on(db.create_account(&"John".into(), &PASSWORD.into())).unwrap_err();
     }
 }
