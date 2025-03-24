@@ -55,7 +55,7 @@ impl Database {
             })
         };
         
-        let correct_password = verify(&password, &user.password).expect("bcrypt failed to verify password");
+        let correct_password = verify(&password, &user.password).unwrap();
         if !correct_password {
             return Err(LoginError::WrongPassword)
         }

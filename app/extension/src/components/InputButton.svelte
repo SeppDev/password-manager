@@ -9,7 +9,7 @@
     let visible = $state(true);
     let page: Page = $state("loading");
 
-    const accounts = ["SeppDev", "SkibidiToiletFan", "student"];
+    const accounts = ["SeppDev", "SkibidiToiletFan", "student2"];
     function clicked(button: HTMLElement) {
         visible = !visible;
     }
@@ -21,8 +21,8 @@
     setTimeout(() => {
         page = "home";
         visible = true;
-    }, 5);
-</script>
+    }, 1    );
+</script>   
 
 <div class="w-full h-full z-100">
     <style>

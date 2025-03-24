@@ -7,10 +7,10 @@ impl Database {
         self.pool
             .execute(
                 "CREATE TABLE users (
-                        id   INTEGER PRIMARY KEY,
+                        id   INTEGER AUTO INCREMENT PRIMARY KEY,
                         name TEXT NOT NULL UNIQUE,
                         password TEXT NOT NULL,
-                        data TEXT NOT NULL
+                        data BLOB NOT NULL
                     )",
             )
             .await
