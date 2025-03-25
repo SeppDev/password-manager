@@ -9,7 +9,7 @@ mod tests {
 
     async fn create_database() -> Result<Database> {
         dotenv().ok();
-        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is required");
+        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
 
         let db = Database::open(&database_url).await?;
         db.init_connection().await;

@@ -7,7 +7,7 @@ use accounts::SingupCreds;
 use serde_json::json;
 
 #[derive(Responder)]
-enum ApiResponse {
+pub(crate) enum ApiResponse {
     #[response(status = 200)]
     Ok(String),
 
@@ -55,15 +55,12 @@ pub async fn signup<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResp
 }
 
 #[get("/login")]
-pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResponse {
+pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> Result<ApiResponse, ApiResponse> {
     let result = db
         .login(&creds.username.into(), &creds.password.into())
-        .await;
+        .await?;
 
-    match result {
-        Ok(t) => ApiResponse::ok_message(t),
-        Err(err) => ApiResponse::err_message(err.to_string()),
-    }
+    Ok(ApiResponse::ok_message(result))
 }
 
 #[get("/users")]
