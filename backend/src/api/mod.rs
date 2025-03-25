@@ -1,54 +1,73 @@
-
-use crate::database::{accounts::LoginError, Database};
-use rocket::{
-    Request, State,
-    http::Status,
-    request::{FromRequest, Outcome},
-};
+use crate::database::Database;
+use rocket::State;
 use serde::{Deserialize, Serialize};
 
 mod accounts;
-use accounts::{SignupError, SingupCreds};
+use accounts::SingupCreds;
+use serde_json::json;
 
-
-#[derive(Serialize, Deserialize)]
+#[derive(Responder)]
 enum ApiResponse {
-    Message(String),
-    Token(String)
+    #[response(status = 200)]
+    Ok(String),
+
+    #[response(status = 404)]
+    Err(String),
+}
+impl ApiResponse {
+    fn message_string(body: impl ToString) -> String {
+        let message = body.to_string();
+        let value = json!({"message": message});
+        serde_json::to_string(&value).unwrap()
+    }
+    fn key_value(key: impl ToString, body: impl ToString) -> String {
+        let key = key.to_string();
+        let body = body.to_string();
+        let value = json!({key: body});
+        serde_json::to_string(&value).unwrap()
+    }
+    pub fn ok_key_value(body: impl ToString) -> ApiResponse {
+        Self::Ok(Self::message_string(body))
+    }
+    pub fn err_key_value(body: impl ToString) -> ApiResponse {
+        Self::Ok(Self::message_string(body))
+    }
+    pub fn ok_message(body: impl ToString) -> ApiResponse {
+        Self::Ok(Self::message_string(body))
+    }
+    pub fn err_message(body: impl ToString) -> ApiResponse {
+        Self::Ok(Self::message_string(body))
+    }
 }
 
 #[post("/signup")]
-pub async fn signup<'r>(
-    db: &State<Database>,
-    creds: SingupCreds<'r>,
-) -> String {
+pub async fn signup<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResponse {
     let result = db
         .create_account(&creds.username.into(), &creds.password.into())
         .await;
 
-    let message = match result {
-        Ok(_) => "Succesfully created account",
-        Err(_) => "Failed to create account"
-    };
-    
-    serde_json::to_string(&ApiResponse::Message(message.into())).unwrap()
+    println!("{result:#?}");
+
+    match result {
+        Ok(_) => ApiResponse::ok_message("Succesfully created account"),
+        Err(_) => ApiResponse::err_message("Failed to create account"),
+    }
 }
 
 #[get("/login")]
-pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> Result<String, String> {
-    let result = db.login(&creds.username.into(), &creds.password.into()).await;
+pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResponse {
+    let result = db
+        .login(&creds.username.into(), &creds.password.into())
+        .await;
 
-    let response = match result {
-        Ok(t) => ApiResponse::Token(t),
-        Err(err) => ApiResponse::Message(err.to_string()),
-    };
-
-    Ok(serde_json::to_string(&response).unwrap())
+    match result {
+        Ok(t) => ApiResponse::ok_message(t),
+        Err(err) => ApiResponse::err_message(err.to_string()),
+    }
 }
 
 #[get("/users")]
-pub async fn fetch_users(db: &State<Database>) -> String {
+pub async fn fetch_users(db: &State<Database>) -> ApiResponse {
     let result = db.fetch_users().await.unwrap();
-
-    serde_json::to_string(&result).unwrap()
+    ApiResponse::Ok(serde_json::to_string(&result).unwrap())
 }

@@ -7,9 +7,14 @@ mod api;
 mod database;
 mod tests;
 
+use dotenv::dotenv;
+
 #[launch]
 async fn rocket() -> _ {
-    let db = Database::new_memory().await.unwrap();
+    dotenv().ok();
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL is required");
+
+    let db = Database::open(&database_url).await.unwrap();
     db.init_connection().await;
 
     rocket::build()
