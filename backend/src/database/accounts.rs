@@ -1,11 +1,10 @@
-use std::fmt::Display;
+use std::fmt::Debug;
 
 use crate::api::ApiResponse;
+use chrono::{Duration, Utc};
 
 use super::Database;
 use bcrypt::{DEFAULT_COST, hash, verify};
-use chrono::Utc;
-use time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
@@ -55,13 +54,13 @@ impl Database {
         }
 
         let uuid = Uuid::new_v4().to_string();
+        let expires_at = Utc::now() + Duration::days(1);
 
         let result =
-            sqlx::query("INSERT INTO sessions(token, expires_at, user_id) VALUES($1, $2, $3)")
+            sqlx::query("INSERT INTO sessions(token, user_id, expires_at) VALUES($1, $2, $3)")
                 .bind(&uuid)
-                .bind(OffsetDateTime::now_utc().to_string())
                 .bind(user.id)
-                .bind(String::new())
+                .bind(expires_at)
                 .execute(&self.pool)
                 .await;
 
@@ -72,14 +71,30 @@ impl Database {
 
         return Ok(uuid);
     }
-    pub async fn fetch_users(&self) -> sqlx::Result<Vec<User>> {
-        sqlx::query_as::<_, User>("SELECT * FROM users;")
-            .fetch_all(&self.pool)
+    pub async fn is_token_valid(&self, token: &String) -> sqlx::Result<bool> {
+        sqlx::query("DELETE FROM sessions WHERE expires_at < NOW();")
+            .execute(&self.pool)
             .await
+            .expect("Failed to delete previous sessions");
+
+        let exists: bool =
+            sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM sessions WHERE token = $1);")
+                .bind(token)
+                .fetch_one(&self.pool)
+                .await
+                .expect("Failed to select session");
+
+        Ok(exists)
     }
     pub async fn get_user_by_name(&self, name: &String) -> sqlx::Result<User> {
         sqlx::query_as::<_, User>("SELECT * FROM users WHERE name = $1;")
             .bind(name)
+            .fetch_one(&self.pool)
+            .await
+    }
+    pub async fn get_user_by_id(&self, id: &i64) -> sqlx::Result<User> {
+        sqlx::query_as::<_, User>("SELECT * FROM users WHERE name = $1;")
+            .bind(id)
             .fetch_one(&self.pool)
             .await
     }

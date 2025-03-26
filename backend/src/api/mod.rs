@@ -1,6 +1,5 @@
 use crate::database::Database;
 use rocket::State;
-use serde::{Deserialize, Serialize};
 
 mod accounts;
 use accounts::SingupCreds;
@@ -46,8 +45,6 @@ pub async fn signup<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResp
         .create_account(&creds.username.into(), &creds.password.into())
         .await;
 
-    println!("{result:#?}");
-
     match result {
         Ok(_) => ApiResponse::ok_message("Succesfully created account"),
         Err(_) => ApiResponse::err_message("Failed to create account"),
@@ -55,16 +52,20 @@ pub async fn signup<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResp
 }
 
 #[get("/login")]
-pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> Result<ApiResponse, ApiResponse> {
-    let result = db
-        .login(&creds.username.into(), &creds.password.into())
-        .await?;
-
-    Ok(ApiResponse::ok_message(result))
+pub async fn login<'r>(
+    db: &State<Database>,
+    creds: SingupCreds<'r>,
+) -> Result<String, ApiResponse> {
+    db.login(&creds.username.into(), &creds.password.into())
+        .await
 }
 
-#[get("/users")]
-pub async fn fetch_users(db: &State<Database>) -> ApiResponse {
-    let result = db.fetch_users().await.unwrap();
-    ApiResponse::Ok(serde_json::to_string(&result).unwrap())
+#[get("/valid_token/<token>")]
+pub async fn valid_token<'r>(db: &State<Database>, token: &'r str) -> ApiResponse {
+    let result = db.is_token_valid(&token.into()).await;
+
+    match result {
+        Ok(bool) => ApiResponse::ok_message(format!("{bool}")),
+        Err(_) => ApiResponse::err_message("Failed to verify token"),
+    }
 }

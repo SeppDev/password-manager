@@ -20,7 +20,7 @@ impl Database {
             .execute(
                 "CREATE TABLE IF NOT EXISTS sessions (
                 token      TEXT NOT NULL PRIMARY KEY,
-                expires_at TIMESTAMP NOT NULL,
+                expires_at TIMESTAMPTZ NOT NULL,
                 user_id    INTEGER NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )",
