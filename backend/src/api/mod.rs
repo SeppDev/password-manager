@@ -1,5 +1,5 @@
 use crate::database::Database;
-use rocket::State;
+use rocket::{State, http::Status};
 
 mod accounts;
 use accounts::SingupCreds;
@@ -7,6 +7,9 @@ use serde_json::json;
 
 #[derive(Responder)]
 pub(crate) enum ApiResponse {
+    #[response(status = 204)]
+    NoContent(()),
+
     #[response(status = 200)]
     Ok(String),
 
