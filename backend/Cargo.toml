@@ -11,6 +11,7 @@ tokio = "1.44.1"
 bcrypt = "0.17"
 uuid = {version = "1.16.0", features = ["v4"]}
 dotenv = "0.15.0"
+anyhow = "1.0.97"
 
 [dependencies.chrono]
 version = "0.4.40"
@@ -18,5 +19,5 @@ features = ["serde"]
 
 [dependencies.sqlx]
 version = "0.8.3"
-features = ["postgres", "chrono",  "runtime-tokio", "tls-native-tls", "derive"]
+features = ["postgres", "macros", "chrono", "migrate",  "runtime-tokio", "tls-native-tls", "derive"]
 

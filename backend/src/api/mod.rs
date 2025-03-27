@@ -44,9 +44,7 @@ impl ApiResponse {
 
 #[post("/signup")]
 pub async fn signup<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResponse {
-    let result = db
-        .create_account(&creds.username.into(), &creds.password.into())
-        .await;
+    let result = db.create_account(creds.username, creds.password).await;
 
     match result {
         Ok(_) => ApiResponse::ok_message("Succesfully created account"),

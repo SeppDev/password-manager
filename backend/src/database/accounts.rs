@@ -10,25 +10,22 @@ use uuid::Uuid;
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
 pub struct User {
     pub id: i64,
-    pub name: String,
+    pub name: String,  
     pub password: String,
     pub data: String,
 }
 
-pub const MAX_USERNAME_LENGTH: usize = 20;
+use super::db_config::USERS_TABLE;
 
 impl Database {
-    pub async fn create_account(&self, name: &String, password: &String) -> super::QueryResult {
-        let hash = if cfg!(test) || cfg!(debug_assertions) {
-            hash(password, 4).unwrap()
-        } else {
-            hash(password, DEFAULT_COST).unwrap()
-        };
+    pub async fn create_account(&self, name: impl ToString, password: impl ToString) -> super::QueryResult {
+        let hash = hash(password.to_string(), DEFAULT_COST).unwrap();
 
-        sqlx::query("INSERT INTO users(name, password, data) VALUES($1, $2, $3)")
-            .bind(name)
+        let query = format!("INSERT INTO {USERS_TABLE} (name, password, data) VALUES($1, $2, $3)");
+        sqlx::query(query.as_str())
+            .bind(name.to_string())
             .bind(hash)
-            .bind(String::new())
+            .bind(Vec::new() as Vec<u8>)
             .execute(&self.pool)
             .await
     }

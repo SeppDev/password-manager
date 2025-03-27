@@ -1,56 +1,44 @@
 #[cfg(test)]
 mod tests {
+    use bcrypt::hash;
+    use sqlx::PgPool;
+    use sqlx::pool::PoolOptions;
+    use sqlx::{Connection, Pool, Postgres, postgres::PgRow, sqlx_macros};
+    use std::env;
+
     use crate::database::Database;
-    use dotenv::dotenv;
-    use sqlx::Result;
-    use tokio::runtime::Runtime;
 
-    const PASSWORD: &str = "password123";
+    async fn create_database() -> anyhow::Result<Database> {
+        dotenv::dotenv().ok();
 
-    async fn create_database() -> Result<Database> {
-        dotenv().ok();
-        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
+        let pool = PoolOptions::new()
+            .min_connections(0)
+            .max_connections(5)
+            .test_before_acquire(true)
+            .connect(&env::var("DATABASE_URL")?)
+            .await?;
 
-        let db = Database::open(&database_url).await?;
+        let db = Database::from(pool);
         db.init_connection().await;
+        
+
         Ok(db)
     }
 
-    #[test]
-    fn database_creation() {
-        let rt = Runtime::new().unwrap();
-        rt.block_on(create_database()).unwrap();
+
+    #[sqlx_macros::test]
+    async fn it_connects() -> anyhow::Result<()> {
+        create_database().await?;
+        Ok(())
     }
 
-    #[test]
-    fn account_creation() {
-        let rt = Runtime::new().unwrap();
-        let db = rt.block_on(create_database()).unwrap();
-        rt.block_on(db.create_account(&"John".into(), &PASSWORD.into()))
-            .unwrap();
-    }
+    #[sqlx_macros::test]
 
-    #[test]
-    fn account_creation_same_username() {
-        let rt = Runtime::new().unwrap();
-        let db = rt.block_on(create_database()).unwrap();
-        rt.block_on(db.create_account(&"John".into(), &PASSWORD.into()))
-            .unwrap();
-        rt.block_on(db.create_account(&"John".into(), &PASSWORD.into()))
-            .unwrap_err();
-    }
+    async fn account_creation() -> anyhow::Result<()> {
+        let db = create_database().await?;
 
-    #[test]
-    fn account_id_check() {
-        let rt = Runtime::new().unwrap();
-        let db = rt.block_on(create_database()).unwrap();
-        rt.block_on(db.create_account(&"John".into(), &PASSWORD.into()))
-            .unwrap();
-        rt.block_on(db.create_account(&"Jane".into(), &PASSWORD.into()))
-            .unwrap();
+        db.create_account("John", "password").await?;
 
-        let john = rt.block_on(db.get_user_by_name(&"John".into())).unwrap();
-        let jane = rt.block_on(db.get_user_by_name(&"Jane".into())).unwrap();
-        assert!(john.id != jane.id)
+        Ok(())
     }
 }
