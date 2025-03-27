@@ -1,20 +1,22 @@
-use sqlx::{Executor, Result};
+use sqlx::{Executor, Result, postgres::PgQueryResult};
 
 pub mod db {
-    use sqlx::{Pool, postgres::PgQueryResult};
+    use sqlx::Pool;
 
     pub type DBSolution = sqlx::Postgres;
     pub type DBPool = Pool<DBSolution>;
-    pub type QueryResult = sqlx::Result<PgQueryResult>;
+    pub type QueryResult<T> = sqlx::Result<T, sqlx::Error>;
 }
 
-#[cfg(test)]
+#[cfg(debug_assertions)]
 pub mod db_config {
     pub const USERS_TABLE: &str = "temp_users";
+    pub const SESSIONS_TABLE: &str = "temp_sessions";
 }
-#[cfg(not(test))]
+#[cfg(not(debug_assertions))]
 pub mod db_config {
     pub const USERS_TABLE: &str = "users";
+    pub const SESSIONS_TABLE: &str = "sessions";
 }
 
 use db::*;
@@ -33,7 +35,7 @@ impl Database {
         let pool = DBPool::connect(&url).await.unwrap();
         Ok(Self::from(pool))
     }
-    pub async fn execute(&self, query: impl ToString) -> db::QueryResult {
+    pub async fn execute(&self, query: impl ToString) -> db::QueryResult<PgQueryResult> {
         self.pool.execute(query.to_string().as_str()).await
     }
 }

@@ -12,6 +12,7 @@ bcrypt = "0.17"
 uuid = {version = "1.16.0", features = ["v4"]}
 dotenv = "0.15.0"
 anyhow = "1.0.97"
+fake = "4.2.0"
 
 [dependencies.chrono]
 version = "0.4.40"
