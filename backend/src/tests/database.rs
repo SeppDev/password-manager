@@ -1,11 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use bcrypt::{hash, verify};
+    use bcrypt::verify;
+    use fake::Fake;
     use fake::faker::internet::en::Username;
-    use fake::{Fake, faker};
-    use sqlx::PgPool;
     use sqlx::pool::PoolOptions;
-    use sqlx::{Connection, Pool, Postgres, postgres::PgRow, sqlx_macros};
+    use sqlx::sqlx_macros;
     use std::env;
 
     use crate::database::Database;
@@ -13,21 +12,19 @@ mod tests {
     async fn create_database() -> anyhow::Result<Database> {
         dotenv::dotenv().ok();
 
+        let database_url = env::var("TEST_DATABASE_URL").expect("Expected database_url");
+
         let pool = PoolOptions::new()
             .min_connections(0)
             .max_connections(5)
             .test_before_acquire(true)
-            .connect(&env::var("DATABASE_URL")?)
+            .connect(&database_url)
             .await?;
 
         let db = Database::from(pool);
         db.test_init_connection().await;
 
         Ok(db)
-    }
-
-    fn generate_fake_username() -> String {
-        Username().fake()
     }
 
     #[sqlx_macros::test]
@@ -41,7 +38,7 @@ mod tests {
         let db = create_database().await?;
         let username: String = Username().fake();
 
-        db.create_account(&username, "password").await?;    
+        db.create_account(&username, "password").await?;
         Ok(())
     }
 

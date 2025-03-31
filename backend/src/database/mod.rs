@@ -8,12 +8,12 @@ pub mod db {
     pub type QueryResult<T> = sqlx::Result<T, sqlx::Error>;
 }
 
-#[cfg(debug_assertions)]
+#[cfg(test)]
 pub mod db_config {
     pub const USERS_TABLE: &str = "temp_users";
     pub const SESSIONS_TABLE: &str = "temp_sessions";
 }
-#[cfg(not(debug_assertions))]
+#[cfg(not(test))]
 pub mod db_config {
     pub const USERS_TABLE: &str = "users";
     pub const SESSIONS_TABLE: &str = "sessions";

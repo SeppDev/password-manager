@@ -2,8 +2,7 @@ use super::Database;
 use super::db_config::{SESSIONS_TABLE, USERS_TABLE};
 
 impl Database {
-    #[cfg(debug_assertions)]
-    #[allow(unused)]
+    #[cfg(test)]
     pub async fn test_init_connection(&self) {
         let query = format!(
             "
@@ -12,7 +11,6 @@ impl Database {
         "
         );
         self.execute(query).await.unwrap();
-
         self.init_connection().await
     }
 
@@ -20,13 +18,13 @@ impl Database {
         self._init_connection(USERS_TABLE, SESSIONS_TABLE).await;
     }
 
-    async fn _init_connection(&self, users: &'static str, sessions: &'static str) {
+    async fn _init_connection(&self, users: &str, sessions: &str) {
         let query = format!(
             "CREATE TABLE IF NOT EXISTS {users} (
                 id       BIGSERIAL PRIMARY KEY,
                 name     TEXT NOT NULL UNIQUE,
                 password TEXT NOT NULL,
-                data     BYTEA NOT NULL 
+                accounts BYTEA[] NOT NULL 
             );",
         );
 
