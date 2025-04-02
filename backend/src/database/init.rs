@@ -21,10 +21,10 @@ impl Database {
     async fn _init_connection(&self, users: &str, sessions: &str) {
         let query = format!(
             "CREATE TABLE IF NOT EXISTS {users} (
-                id       BIGSERIAL PRIMARY KEY,
-                name     TEXT NOT NULL UNIQUE,
-                password TEXT NOT NULL,
-                accounts BYTEA[] NOT NULL 
+                id         BIGSERIAL PRIMARY KEY,
+                name       TEXT NOT NULL UNIQUE,
+                password   TEXT NOT NULL,
+                data BYTEA[] NOT NULL 
             );",
         );
 

@@ -25,10 +25,6 @@
 </script>   
 
 <div class="w-full h-full z-100">
-    <style>
-        @import "tailwindcss";
-    </style>
-
     <button
         onclick={(event) => clicked(event.currentTarget)}
         class="w-full h-full rounded-full cursor-pointer bg-indigo-950 hover:outline-2 hover:outline-indigo-600"
