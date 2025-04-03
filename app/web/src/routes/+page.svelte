@@ -8,7 +8,7 @@
 		<div class="flex flex-col items-center justify-center h-full gap-10 grow-3">
 			<div class="flex flex-col items-center">
 				<p class="text-4xl font-medium">AuraPass</p>
-				<p class="text-xl">The new way to store your passwords!</p>
+				<p class="text-xl">Smart. Secure. Effortless.</p>
 			</div>
 
 			<div class="flex gap-3">
@@ -16,9 +16,9 @@
 					class="px-4 py-2 font-medium duration-200 bg-blue-800 rounded-full shadow-xl cursor-pointer hover:bg-blue-700"
 					>Get started</button
 				>
-				<a href="./login"
+				<a href="./register"
 					class="px-4 py-2 font-medium text-black duration-200 bg-blue-400 rounded-full shadow-xl cursor-pointer hover:bg-blue-500"
-					>Login</a
+					>Register</a
 				>
 			</div>
 		</div>

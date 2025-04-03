@@ -1,6 +1,6 @@
-const URI = "http://localhost:5173"
+const URI = "https://aurapass.nl"
 
 export default {
     base: URI,
-    api: `${URI}/api`
+    api: `api.${URI}`
 } as const

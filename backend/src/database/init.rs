@@ -32,7 +32,7 @@ impl Database {
 
         let query = format!(
             "CREATE TABLE IF NOT EXISTS {sessions} (
-            token      TEXT NOT NULL PRIMARY KEY,
+            token      bytea NOT NULL PRIMARY KEY,
             expires_at TIMESTAMPTZ NOT NULL,
             user_id    INTEGER NOT NULL,
             FOREIGN KEY (user_id) REFERENCES {users}(id)

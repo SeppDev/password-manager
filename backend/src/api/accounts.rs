@@ -1,26 +1,34 @@
+use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
 
-use rocket::{
-    Request,
-    http::Status,
-    request::{FromRequest, Outcome},
-};
+use crate::database::{Database, accounts::User};
+use rocket::State;
 
 use super::ApiResponse;
 
-pub struct SingupCreds<'a> {
-    pub username: &'a str,
-    pub password: &'a str,
+pub enum SignupCreds<'a> {
+    Info {
+        username: &'a str,
+        password: &'a str,
+    },
+    Err(ApiResponse),
+}
+impl<'a> SignupCreds<'a> {
+    #[inline(always)]
+    pub fn may_fail(self) -> Result<(&'a str, &'a str), ApiResponse> {
+        match self {
+            Self::Info { username, password } => Ok((username, password)),
+            Self::Err(e) => return Err(e),
+        }
+    }
 }
 
 #[derive(Debug)]
 pub enum SignupError {
-    InvalidHeaders,
-    InvalidUsername,
-    InvalidPassword
+    MissingHeaders,
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for SingupCreds<'r> {
+impl<'r> FromRequest<'r> for SignupCreds<'r> {
     type Error = SignupError;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
@@ -30,15 +38,49 @@ impl<'r> FromRequest<'r> for SingupCreds<'r> {
 
         let (username, password) = match (username, password) {
             (Some(n), Some(p)) => (n, p),
-            _ => return Outcome::Error((Status::BadRequest, SignupError::InvalidHeaders)),
+            _ => return Outcome::Error((Status::BadRequest, SignupError::MissingHeaders)),
         };
 
         if username.len() < 3 || username.len() > 20 {
-            return ApiResponse::ok_message("Username must be between 3 and 20 characters long");
+            return Outcome::Success(Self::Err(ApiResponse::ok_message(
+                "Username must be between 3 and 20 characters long",
+            )));
         } else if password.len() < 8 {
-            return ApiResponse::ok_message("Password is too short");
+            return Outcome::Success(Self::Err(ApiResponse::ok_message("Password is too short")));
         }
 
-        Outcome::Success(SingupCreds { username, password })
+        Outcome::Success(Self::Info { username, password })
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for User {
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let db = match req.guard::<&State<Database>>().await {
+            Outcome::Success(db) => db,
+            Outcome::Forward(status) | Outcome::Error((status, _)) => {
+                return Outcome::Error((status, ()));
+            }
+        };
+
+        let cookies = req.cookies();
+        let token = match cookies.get("token") {
+            Some(token) => token.to_string(),
+            None => return Outcome::Error((Status::BadRequest, ())),
+        };
+
+        let session = match db.get_token_session(&token).await {
+            Ok(b) => b,
+            Err(_) => return Outcome::Error((Status::BadRequest, ())),
+        };
+
+        let user = match db.get_user_by_id(&session.user_id).await {
+            Ok(u) => u,
+            Err(_) => return Outcome::Error((Status::InternalServerError, ())),
+        };
+
+        Outcome::Success(user)
     }
 }

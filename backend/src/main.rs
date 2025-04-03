@@ -22,5 +22,5 @@ async fn rocket() -> _ {
     rocket::build()
     .manage(db)
     .attach(CORS)
-        .mount("/api", routes![api::signup, api::login, api::valid_token])
+        .mount("/api", routes![api::signup, api::login])
 }
