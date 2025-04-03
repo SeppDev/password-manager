@@ -1,9 +1,11 @@
 #[macro_use]
 extern crate rocket;
 
+use cors::CORS;
 use database::Database;
 
 mod api;
+mod cors;
 mod database;
 mod tests;
 
@@ -18,6 +20,7 @@ async fn rocket() -> _ {
     db.init_connection().await;
 
     rocket::build()
-        .manage(db)
+    .manage(db)
+    .attach(CORS)
         .mount("/api", routes![api::signup, api::login, api::valid_token])
 }

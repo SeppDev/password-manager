@@ -1,6 +1,6 @@
 use crate::database::Database;
 use bcrypt::verify;
-use rocket::{State, http::Status};
+use rocket::State;
 
 mod accounts;
 use accounts::SingupCreds;
@@ -21,7 +21,7 @@ pub(crate) enum ApiResponse {
     #[response(status = 200)]
     Ok(String),
 
-    #[response(status = 404)]
+    #[response(status = 400)]
     Err(String),
 }
 impl ApiResponse {
@@ -40,38 +40,55 @@ impl ApiResponse {
         Self::Ok(Self::key_value(key, value))
     }
     pub fn err_key_value(key: impl ToString, value: impl ToString) -> ApiResponse {
-        Self::Ok(Self::key_value(key, value))
+        Self::Err(Self::key_value(key, value))
     }
     pub fn ok_message(body: impl ToString) -> ApiResponse {
         Self::Ok(Self::message_string(body))
     }
     pub fn err_message(body: impl ToString) -> ApiResponse {
-        Self::Ok(Self::message_string(body))
+        Self::Err(Self::message_string(body))
     }
 }
 
 #[post("/signup")]
 pub async fn signup<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResponse {
-    let result = db.create_account(&creds.username, creds.password).await;
 
-    if result.is_ok() {
-        let user = db.get_user_by_name(creds.username).await.unwrap();
-        let token = db.create_token(&user.id).await.unwrap();
-        let json = json!({"message": "Succesfully created account", "token": token});
-        return ApiResponse::Ok(json.to_string());
-    }
+    match db.get_user_by_name(&creds.username).await {
+        Ok(_) => return ApiResponse::ok_message("Account already exists"),
+        Err(err) => match err {
+            sqlx::Error::RowNotFound => {},
+            _ => return ApiResponse::ok_message(err.to_string())
+        }
+    };
 
-    ApiResponse::err_message("Failed to create account")
+    let _result = match db.create_account(&creds.username, creds.password).await {
+        Ok(r) => r,
+        Err(err) => return ApiResponse::err_message(err.to_string())
+    };
+
+    let user = match db.get_user_by_name(&creds.username).await {
+        Ok(u) => u,
+        Err(err) => return ApiResponse::err_message(err.to_string())
+    };
+
+    let token = match db.create_token(&user.id).await {
+        Ok(t) => t,
+        Err(_) => return ApiResponse::err_message("Failed to create session token")
+    };
+
+    let json = json!({"message": "Succesfully created account", "token": token});
+
+    ApiResponse::Ok(json.to_string())
 }
 
-#[get("/login")]
+#[post("/login")]
 pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiResponse {
     let user = db.get_user_by_name(&creds.username.to_string()).await;
     let user = match user {
         Ok(u) => u,
         Err(err) => {
             return match err {
-                sqlx::Error::RowNotFound => ApiResponse::err_message("User not found"),
+                sqlx::Error::RowNotFound => ApiResponse::ok_message("User not found"),
                 _ => ApiResponse::err_message(err.to_string()),
             };
         }
@@ -79,7 +96,7 @@ pub async fn login<'r>(db: &State<Database>, creds: SingupCreds<'r>) -> ApiRespo
 
     let correct_password = verify(&creds.password, &user.password).unwrap();
     if !correct_password {
-        return ApiResponse::err_message("Wrong password");
+        return ApiResponse::ok_message("Wrong password");
     }
 
     let token = db.create_token(&user.id).await.unwrap();

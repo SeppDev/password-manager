@@ -24,7 +24,7 @@ impl Database {
                 id         BIGSERIAL PRIMARY KEY,
                 name       TEXT NOT NULL UNIQUE,
                 password   TEXT NOT NULL,
-                data BYTEA[] NOT NULL 
+                data       BYTEA NOT NULL 
             );",
         );
 

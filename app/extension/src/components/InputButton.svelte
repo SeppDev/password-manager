@@ -6,7 +6,7 @@
     
     type Page = "loading" | "notsigned" | "home";
 
-    let visible = $state(true);
+    let visible = $state(false);
     let page: Page = $state("loading");
 
     const accounts = ["SeppDev", "SkibidiToiletFan", "student2"];
@@ -20,11 +20,14 @@
     }
     setTimeout(() => {
         page = "home";
-        visible = true;
-    }, 1    );
+    }, 1);
 </script>   
 
 <div class="w-full h-full z-100">
+    <style>
+        @import "tailwindcss";
+    </style>
+
     <button
         onclick={(event) => clicked(event.currentTarget)}
         class="w-full h-full rounded-full cursor-pointer bg-indigo-950 hover:outline-2 hover:outline-indigo-600"

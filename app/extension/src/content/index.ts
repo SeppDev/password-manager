@@ -5,11 +5,11 @@ const id = "PASSWORD_MANAGER";
 
 const config = {
     buttonScale: 0.7,
-    maxButtonSize: 40,
+    maxButtonSize: 50,
 
     inputCheckInterval: 500,
     inputQueryInterval: 1000,
-};
+}
 
 const found = document.getElementById(id);
 if (found) {

@@ -4,48 +4,121 @@
 	import Config from '../../config';
 
 	let loading = $state(false);
+	let buttonState: 'login' | 'signup' = $state('login');
+
+	function switchButtonState() {
+		buttonState = buttonState === 'login' ? (buttonState = 'signup') : (buttonState = 'login');
+	}
 
 	async function login(event: Event) {
 		event.preventDefault();
+
 		if (loading) return;
 		loading = true;
 
 		const username = document.getElementById('Username') as HTMLInputElement;
 		const password = document.getElementById('Password') as HTMLInputElement;
 
-		const response = await fetch(`${Config.api}/signup`, {
-			method: 'POST',
-			headers: {
-				username: username.value,
-				password: password.value
-			}
-		});
+		try {
+			const response = await fetch(`${Config.api}/login`, {
+				method: 'POST',
+				headers: {
+					username: username.value,
+					password: password.value
+				}
+			});
+
+			const json = await response.json();
+			console.log(json);
+		} catch {}
+
+		loading = false;
+	}
+
+	async function signup(event: Event) {
+		event.preventDefault();
+
+		if (loading) return;
+		loading = true;
+
+		const username = document.getElementById('Username') as HTMLInputElement;
+		const password = document.getElementById('Password') as HTMLInputElement;
+
+		try {
+			const response = await fetch(`${Config.api}/signup`, {
+				method: 'POST',
+				headers: {
+					username: username.value,
+					password: password.value
+				}
+			});
+
+			const json = await response.json();
+			console.log(json);
+		} catch {}
 
 		loading = false;
 	}
 </script>
 
-<div class="flex items-center justify-center inset-shadow-black-2x h-dvh w-dvw bg-neutral-800">
-	<div class="flex flex-col items-center justify-center gap-2 py-4 w-70 rounded-2xl bg-neutral-100">
-		<p class="text-2xl font-medium text-left">Login</p>
+<div class="flex items-center justify-center inset-shadow-black-2x h-dvh w-dvw bg-gray-950">
+	<form class="flex flex-col items-center justify-center gap-3 p-4 w-70 rounded-4xl bg-neutral-900">
+		<p class="text-2xl font-bold text-left text-white">Login</p>
 		{@render input('Username', 'text')}
 		{@render input('Password', 'password')}
-		<hr class="text-gray-800" />
-	</div>
+		<hr />
+		{#if buttonState === 'login'}
+			<button
+				type="submit"
+				onclick={login}
+				class="w-full px-4 py-2 font-bold text-black duration-200 bg-blue-500 rounded-full shadow-xl cursor-pointer hover:bg-blue-600"
+				>{@render loader('Login')}</button
+			>
 
-	<!-- <div
-		style="position: fixed;top: 0;left: 0;width: 100%;height: 100%;box-shadow: 0 0 200px rgba(0,0,0,0.9) inset;"
-	></div> -->
+			<button
+				onclick={switchButtonState}
+				class="text-sm text-center text-blue-500 duration-100 cursor-pointer hover:text-blue-600"
+				>Don't have an account?</button
+			>
+		{:else}
+			<button
+				type="submit"
+				onclick={signup}
+				class="w-full px-4 py-2 font-bold text-black duration-200 bg-blue-500 rounded-full shadow-xl cursor-pointer hover:bg-blue-600"
+				>{@render loader('Signup')}</button
+			>
+
+			<button
+				onclick={switchButtonState}
+				class="text-sm text-center text-blue-500 duration-100 cursor-pointer hover:text-blue-600"
+				>Already have an account?</button
+			>
+		{/if}
+	</form>
 </div>
 
+{#snippet loader(text: String)}
+	{#if loading}
+		<div class="flex items-center justify-center h-6">
+			<Loader />
+		</div>
+	{:else}
+		{text}
+	{/if}
+{/snippet}
+
 {#snippet input(title: string, type: 'text' | 'password' | 'email')}
-	<div>
-		<p class="relative px-2 py-0 text-base top-2.5 left-4.5 w-fit bg-neutral-100">{title}</p>
+	<div class="w-full">
+		<p
+			class="relative px-2 py-0 text-sm font-medium left-4 top-2 w-fit bg-neutral-900 text-neutral-500"
+		>
+			{title}
+		</p>
 		<input
-		id={title}
-		name={title}
-		{type}
-		class="rounded-full z-10 px-4 py-1.5 outline-1 outline-gray-800"
+			id={title}
+			name={title}
+			{type}
+			class="z-10 w-full rounded-full px-4 py-1.5 text-base text-white outline-1 outline-neutral-500"
 		/>
 	</div>
 {/snippet}

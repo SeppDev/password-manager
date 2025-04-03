@@ -25,6 +25,8 @@ impl Database {
     ) -> super::QueryResult<PgQueryResult> {
         let hash = hash(password.to_string(), DEFAULT_COST).unwrap();
 
+        
+
         let query = format!("INSERT INTO {USERS_TABLE} (name, password, data) VALUES($1, $2, $3)");
         sqlx::query(&query)
             .bind(name.to_string())
@@ -66,7 +68,7 @@ impl Database {
         Ok(exists)
     }
     pub async fn get_user_by_name(&self, name: impl ToString) -> sqlx::Result<User> {
-        let query = format!("SELECT * FROM {USERS_TABLE} WHERE name = $1;");
+        let query = format!("SELECT * FROM {USERS_TABLE} WHERE name = ($1);");
 
         sqlx::query_as::<_, User>(&query)
             .bind(name.to_string())

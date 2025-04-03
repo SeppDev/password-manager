@@ -16,10 +16,10 @@
 					class="px-4 py-2 font-medium duration-200 bg-blue-800 rounded-full shadow-xl cursor-pointer hover:bg-blue-700"
 					>Get started</button
 				>
-				<!-- <button
+				<a href="./login"
 					class="px-4 py-2 font-medium text-black duration-200 bg-blue-400 rounded-full shadow-xl cursor-pointer hover:bg-blue-500"
-					>Lorem ipsum</button
-				> -->
+					>Login</a
+				>
 			</div>
 		</div>
 		<div class="flex h-full not-sm:hidden aspect-3/2 not-xl:hidden">

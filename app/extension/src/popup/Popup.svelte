@@ -6,10 +6,11 @@
 
     import type { Account } from "../types/Account.ts";
     import EllipsisVertical from "../assets/EllipsisVertical.svelte";
+    import Button from "../components/Button.svelte";
 
     const { loginPage } = $props();
 
-    let page: "loading" | "home" = $state("loading");
+    let page: "loading" | "home" | "login" = $state("loading");
 
     let activeAccount: Account | undefined = $state(undefined);
     let accounts: Array<Account> = $state([]);
@@ -24,21 +25,30 @@
 
         accounts.push(account);
     }
-    
+
     activeAccount = accounts[0];
 
     setTimeout(() => {
-        page = "home";
+        page = "login";
     }, 50);
 </script>
 
 <div class="overflow-hidden">
     {#if page === "loading"}
         <Loading />
-    {:else if page == "home"}
+    {:else if page === "login"}
+        <Login />
+    {:else if page === "home"}
         <Home />
     {/if}
 </div>
+
+{#snippet Login()}
+    <div class="flex flex-col items-center justify-center gap-4 h-50 w-100">
+        <p class="text-4xl font-medium">Aurapass</p>
+        <Button onclick={loginPage}>Login</Button>
+    </div>
+{/snippet}
 
 {#snippet Loading()}
     <div class="flex items-center justify-center w-20 h-20">
@@ -50,7 +60,6 @@
 
 {#snippet Home()}
     <div class="flex flex-col w-auto h-auto">
-        <button onclick={loginPage}>Login</button>
         <Topbar />
         <Acounts />
     </div>
@@ -88,10 +97,9 @@
             <button
                 class="flex items-center justify-center duration-200 rounded-full cursor-pointer aspect-square hover:bg-indigo-900"
             >
-            <div class="flex items-center justify-center w-4 h-4">
-                <EllipsisVertical />
-
-            </div>
+                <div class="flex items-center justify-center w-4 h-4">
+                    <EllipsisVertical />
+                </div>
             </button>
         </div>
         <div class="w-full p-1 grow-1 bg-pink-450">
