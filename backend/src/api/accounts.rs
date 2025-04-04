@@ -1,3 +1,4 @@
+use base64::{prelude::BASE64_STANDARD, Engine};
 use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
 
 use crate::database::{Database, accounts::User};
@@ -13,7 +14,6 @@ pub enum SignupCreds<'a> {
     Err(ApiResponse),
 }
 impl<'a> SignupCreds<'a> {
-    #[inline(always)]
     pub fn may_fail(self) -> Result<(&'a str, &'a str), ApiResponse> {
         match self {
             Self::Info { username, password } => Ok((username, password)),
@@ -68,7 +68,7 @@ impl<'r> FromRequest<'r> for User {
         let cookies = req.cookies();
         let token = match cookies.get("token") {
             Some(token) => token.to_string(),
-            None => return Outcome::Error((Status::BadRequest, ())),
+            None => return Outcome::Error((Status::Unauthorized, ())),
         };
 
         let session = match db.get_token_session(&token).await {

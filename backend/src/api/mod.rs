@@ -1,4 +1,4 @@
-use crate::database::Database;
+use crate::database::{accounts::User, Database};
 use bcrypt::verify;
 use rocket::State;
 
@@ -74,3 +74,9 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
     ApiResponse::ok_key_value("token", token).into()
 }
 
+
+
+#[get("/userinfo")]
+pub async fn user_info<'r>( user: User) -> String {
+    serde_json::to_string(&user).unwrap()
+}

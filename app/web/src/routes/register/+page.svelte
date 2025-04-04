@@ -4,8 +4,8 @@
 	import Config from '../../config';
 
 	type Response = {
-		message: String | undefined;
-		token: String | undefined;
+		message?: String;
+		token?: String;
 	};
 
 	let errorMessage: String | undefined = $state(undefined);
@@ -18,10 +18,12 @@
 	}
 
 	async function handleResponse(response: Response) {
-		if (response.token) {
-			page = 'loggedin';
-		}
 		errorMessage = response.message;
+		if (!response.token) return
+
+		console.log(response);
+		page = 'loggedin';
+		document.cookie = `token=${response.token};`
 	}
 
 	async function login(event: Event) {
@@ -79,14 +81,16 @@
 	}
 
 
-	onMount(() => {
+	onMount(async () => {
 		const cookie = document.cookie;
 		if (cookie.length === 0) {
 			page = 'register';
 			return
 		}
-
 		
+		const response = await fetch(`${Config.api}/userinfo`);
+		console.log(await response.json());
+
 	});
 </script>
 
@@ -150,7 +154,7 @@
 
 {#snippet input(title: string, type: 'text' | 'password' | 'email')}
 	<div class="w-full">
-		<p class="px-2 py-0 text-sm left-4 top-2 w-fit bg-neutral-900 text-neutral-500">
+		<p class="relative px-2 py-0 text-sm left-4 top-2 w-fit bg-neutral-900 text-neutral-500">
 			{title}
 		</p>
 		<input

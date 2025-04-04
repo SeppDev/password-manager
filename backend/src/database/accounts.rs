@@ -1,8 +1,9 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, io::Read};
 
 use base64::{Engine, prelude::BASE64_STANDARD};
 use chrono::{Duration, Utc};
-use rand::seq::SliceRandom;
+use rand::{distr::Alphanumeric, seq::SliceRandom};
+use sha2::{Digest, Sha512};
 use sqlx::postgres::PgQueryResult;
 
 use super::Database;
@@ -40,20 +41,23 @@ impl Database {
             .await
     }
     pub async fn create_token(&self, user_id: &i64) -> sqlx::Result<String> {
-        let bytes: Vec<u8> = rand::random_iter().take(100   ).collect();
-        let expires_at = Utc::now() + Duration::days(1);
+        let token: String = rand::random_iter()
+            .sample_iter(&Alphanumeric)
+            .take(7)
+            .map(char::from)
+            .collect();
 
+        let expires_at = Utc::now() + Duration::days(1);
         let query =
             format!("INSERT INTO {SESSIONS_TABLE}(token, user_id, expires_at) VALUES($1, $2, $3)");
 
         sqlx::query(&query)
-            .bind(&bytes)
+            .bind(&token)
             .bind(user_id)
             .bind(expires_at)
             .execute(&self.pool)
             .await?;
 
-        let token = BASE64_STANDARD.encode(bytes);
         return Ok(token);
     }
     pub async fn get_token_session(&self, token: &str) -> sqlx::Result<Session> {
@@ -63,8 +67,8 @@ impl Database {
             .await
             .expect("Failed to delete previous sessions");
 
-        let query =
-            format!("SELECT EXISTS(SELECT user_id FROM {SESSIONS_TABLE} WHERE token = $1);");
+        let query = format!("SELECT user_id FROM {SESSIONS_TABLE} WHERE token = $1;");
+
         sqlx::query_as::<_, Session>(&query)
             .bind(token)
             .fetch_one(&self.pool)
