@@ -1,7 +1,7 @@
 use base64::{prelude::BASE64_STANDARD, Engine};
 use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
 
-use crate::database::{Database, accounts::User};
+use crate::database::{accounts::{Session, User}, Database};
 use rocket::State;
 
 use super::ApiResponse;
@@ -54,7 +54,7 @@ impl<'r> FromRequest<'r> for SignupCreds<'r> {
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for User {
+impl<'r> FromRequest<'r> for Session {
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
@@ -67,13 +67,37 @@ impl<'r> FromRequest<'r> for User {
 
         let cookies = req.cookies();
         let token = match cookies.get("token") {
-            Some(token) => token.to_string(),
+            Some(token) => token.value(),
             None => return Outcome::Error((Status::Unauthorized, ())),
         };
 
         let session = match db.get_token_session(&token).await {
             Ok(b) => b,
             Err(_) => return Outcome::Error((Status::BadRequest, ())),
+        };
+
+        Outcome::Success(session)
+    }
+}
+
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for User {
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let db = match req.guard::<&State<Database>>().await {
+            Outcome::Success(db) => db,
+            Outcome::Forward(status) | Outcome::Error((status, _)) => {
+                return Outcome::Error((status, ()));
+            }
+        };
+
+        let session = match req.guard::<Session>().await {
+            Outcome::Success(session) => session,
+            Outcome::Forward(status) | Outcome::Error((status, _)) => {
+                return Outcome::Error((status, ()));
+            }
         };
 
         let user = match db.get_user_by_id(&session.user_id).await {

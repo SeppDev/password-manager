@@ -89,7 +89,12 @@
 		}
 		
 		const response = await fetch(`${Config.api}/userinfo`);
-		console.log(await response.json());
+		const json = await response.json();
+		
+		if (!json) {
+			page = "register"
+			return
+		}
 
 	});
 </script>
