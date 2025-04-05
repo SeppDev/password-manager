@@ -20,8 +20,6 @@
 	async function handleResponse(response: Response) {
 		errorMessage = response.message;
 		if (!response.token) return
-
-		console.log(response);
 		page = 'loggedin';
 		document.cookie = `token=${response.token};`
 	}
@@ -88,8 +86,11 @@
 			return
 		}
 		
-		const response = await fetch(`${Config.api}/userinfo`);
+		const response = await fetch(`${Config.api}/userinfo`, {
+			credentials: "include"
+		});
 		const json = await response.json();
+		console.log(json);
 		
 		if (!json) {
 			page = "register"

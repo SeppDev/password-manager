@@ -74,8 +74,6 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
     ApiResponse::ok_key_value("token", token).into()
 }
 
-
-
 #[get("/userinfo")]
 pub async fn user_info<'r>(user: Option<User>) -> String {
     serde_json::to_string(&user).unwrap()

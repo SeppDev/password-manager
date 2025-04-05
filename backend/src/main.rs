@@ -14,6 +14,7 @@ use dotenv::dotenv;
 #[launch]
 async fn rocket() -> _ {
     dotenv().ok();
+    
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL");
 
     let db = Database::open(&database_url).await.unwrap();

@@ -14,6 +14,12 @@ impl Fairing for CORS {
     }
 
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+        #[cfg(not(debug_assertions))]
+        let domain = std::env::var("DOMAIN").unwrap();
+
+        #[cfg(debug_assertions)]
+        let domain = std::env::var("TEST_DOMAIN").unwrap();
+
         if request.method() == Method::Options {
             response.set_status(Status::NoContent);
             response.set_header(Header::new(
@@ -25,7 +31,7 @@ impl Fairing for CORS {
 
         response.set_header(Header::new(
             "Access-Control-Allow-Origin",
-            "*",
+            domain,
         ));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }
