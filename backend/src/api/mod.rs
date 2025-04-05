@@ -1,4 +1,5 @@
 use crate::database::{accounts::User, Database};
+use base64::{prelude::BASE64_STANDARD, Engine};
 use bcrypt::verify;
 use rocket::State;
 
@@ -40,7 +41,7 @@ pub async fn signup<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResu
         Err(err) => return ApiResponse::err_message(err.to_string()).into()
     };
 
-    let token = match db.create_token(&user.id).await {
+    let token = match db.create_session(&user.id).await {
         Ok(t) => t,
         Err(_) => return ApiResponse::err_message("Failed to create session token").into()
     };      
@@ -70,11 +71,12 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
         return ApiResponse::ok_message("Wrong password").into();
     }
 
-    let token = db.create_token(&user.id).await.unwrap();
+    let token = db.create_session(&user.id).await.unwrap();
     ApiResponse::ok_key_value("token", token).into()
 }
 
 #[get("/userinfo")]
-pub async fn user_info<'r>(user: Option<User>) -> String {
-    serde_json::to_string(&user).unwrap()
+pub async fn user_info<'r>(db: &State<Database>,  user: User) -> String {
+    let data = db.get_user_data(&user.id).await.unwrap().data;
+    BASE64_STANDARD.encode(data)
 }

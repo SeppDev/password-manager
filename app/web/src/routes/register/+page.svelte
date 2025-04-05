@@ -19,9 +19,9 @@
 
 	async function handleResponse(response: Response) {
 		errorMessage = response.message;
-		if (!response.token) return
+		if (!response.token) return;
 		page = 'loggedin';
-		document.cookie = `token=${response.token};`
+		document.cookie = `token=${response.token};`;
 	}
 
 	async function login(event: Event) {
@@ -78,25 +78,31 @@
 		loading = false;
 	}
 
+	function signout() {
+		document.cookie = 'token=;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+		page = "register";
+	}
 
 	onMount(async () => {
 		const cookie = document.cookie;
 		if (cookie.length === 0) {
 			page = 'register';
-			return
-		}
-		
-		const response = await fetch(`${Config.api}/userinfo`, {
-			credentials: "include"
-		});
-		const json = await response.json();
-		console.log(json);
-		
-		if (!json) {
-			page = "register"
-			return
+			return;
 		}
 
+		try {
+			const response = await fetch(`${Config.api}/userinfo`, {
+				credentials: 'include'
+			});
+			const json = await response.json();
+			console.log(json);
+			if (!json) {
+				page = 'register';
+				return;
+			}
+		} catch {
+			page = 'register';
+		}
 	});
 </script>
 
@@ -129,6 +135,10 @@
 		</div>
 	{:else if page === 'loggedin'}
 		<p class="text-3xl text-white">Logged in</p>
+		<button
+			onclick={signout}
+			class="flex items-center justify-center h-10 p-2 px-4 font-bold text-black transition duration-200 bg-blue-500 rounded-full shadow-xl cursor-pointer hover:bg-blue-600"
+		>Signout</button>
 	{:else}
 		<p class="text-3xl font-black text-white">Oops!</p>
 		<p class="text-white">Something went wrong</p>

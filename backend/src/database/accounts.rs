@@ -1,9 +1,7 @@
-use std::{fmt::Debug, io::Read};
+use std::fmt::Debug;
 
-use base64::{Engine, prelude::BASE64_STANDARD};
 use chrono::{Duration, Utc};
-use rand::{distr::{Alphanumeric, SampleString}, seq::SliceRandom, Rng};
-use sha2::{Digest, Sha512};
+use rand::{Rng, distr::Alphanumeric};
 use sqlx::postgres::PgQueryResult;
 
 use super::Database;
@@ -14,15 +12,19 @@ pub struct User {
     pub id: i64,
     pub name: String,
     pub password: String,
-    pub data: Vec<u8>,
 }
 
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
-pub struct Session {
+pub struct UserSession {
     pub user_id: i64,
 }
 
-use super::db_config::{SESSIONS_TABLE, USERS_TABLE};
+#[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
+pub struct UserData {
+    pub data: Vec<u8>,
+}
+
+use super::db_config::{DATA_TABLE, SESSIONS_TABLE, USERS_TABLE};
 
 impl Database {
     pub async fn create_account(
@@ -40,7 +42,7 @@ impl Database {
             .execute(&self.pool)
             .await
     }
-    pub async fn create_token(&self, user_id: &i64) -> sqlx::Result<String> {
+    pub async fn create_session(&self, user_id: &i64) -> sqlx::Result<String> {
         let token: String = {
             let mut rng = rand::rng();
             (0..100).map(|_| rng.sample(Alphanumeric) as char).collect()
@@ -59,7 +61,7 @@ impl Database {
 
         return Ok(token);
     }
-    pub async fn get_token_session(&self, token: &str) -> sqlx::Result<Session> {
+    pub async fn get_session(&self, token: &str) -> sqlx::Result<UserSession> {
         let query = format!("DELETE FROM {SESSIONS_TABLE} WHERE expires_at < NOW();");
         sqlx::query(&query)
             .execute(&self.pool)
@@ -68,16 +70,16 @@ impl Database {
 
         let query = format!("SELECT user_id FROM {SESSIONS_TABLE} WHERE token = ($1);");
 
-        sqlx::query_as::<_, Session>(&query)
+        sqlx::query_as::<_, UserSession>(&query)
             .bind(token)
             .fetch_one(&self.pool)
             .await
     }
-    pub async fn extend_token(&self, token: &str) -> sqlx::Result<()> {
+    pub async fn extend_session(&self, token: &str) -> sqlx::Result<()> {
         todo!()
     }
     pub async fn get_user_by_name(&self, name: &str) -> sqlx::Result<User> {
-        let query = format!("SELECT * FROM {USERS_TABLE} WHERE name = ($1);");
+        let query = format!("SELECT id, name, password FROM {USERS_TABLE} WHERE name = ($1);");
 
         sqlx::query_as::<_, User>(&query)
             .bind(name.to_string())
@@ -91,5 +93,23 @@ impl Database {
             .bind(id)
             .fetch_one(&self.pool)
             .await
+    }
+    pub async fn get_user_data(&self, id: &i64) -> sqlx::Result<UserData> {
+        let query = format!("SELECT data FROM {USERS_TABLE} WHERE id = ($1);");
+
+        sqlx::query_as::<_, UserData>(&query)
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await
+    }
+    pub async fn set_user_data(&self, id: &i64, data: &str) -> sqlx::Result<()> {
+        let query = format!("UPDATE {USERS_TABLE} SET data = ($1) WHERE id = ($2);");
+
+        sqlx::query(&query)
+            .bind(data)
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
     }
 }

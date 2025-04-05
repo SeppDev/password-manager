@@ -1,7 +1,6 @@
-use base64::{prelude::BASE64_STANDARD, Engine};
 use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
 
-use crate::database::{accounts::{Session, User}, Database};
+use crate::database::{accounts::{UserSession, User}, Database};
 use rocket::State;
 
 use super::ApiResponse;
@@ -54,7 +53,7 @@ impl<'r> FromRequest<'r> for SignupCreds<'r> {
 }
 
 #[rocket::async_trait]
-impl<'r> FromRequest<'r> for Session {
+impl<'r> FromRequest<'r> for UserSession {
     type Error = ();
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
@@ -71,7 +70,7 @@ impl<'r> FromRequest<'r> for Session {
             None => return Outcome::Error((Status::Unauthorized, ())),
         };
 
-        let session = match db.get_token_session(&token).await {
+        let session = match db.get_session(&token).await {
             Ok(b) => b,
             Err(_) => return Outcome::Error((Status::BadRequest, ())),
         };
@@ -93,7 +92,7 @@ impl<'r> FromRequest<'r> for User {
             }
         };
 
-        let session = match req.guard::<Session>().await {
+        let session = match req.guard::<UserSession>().await {
             Outcome::Success(session) => session,
             Outcome::Forward(status) | Outcome::Error((status, _)) => {
                 return Outcome::Error((status, ()));

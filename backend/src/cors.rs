@@ -18,7 +18,7 @@ impl Fairing for CORS {
         let domain = std::env::var("DOMAIN").unwrap();
 
         #[cfg(debug_assertions)]
-        let domain = std::env::var("TEST_DOMAIN").unwrap();
+        let domain = std::env::var("TEST_DOMAIN").unwrap_or("*".into());
 
         if request.method() == Method::Options {
             response.set_status(Status::NoContent);
