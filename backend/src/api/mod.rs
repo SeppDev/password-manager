@@ -75,8 +75,11 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
     ApiResponse::ok_key_value("token", token).into()
 }
 
-#[get("/userinfo")]
-pub async fn user_info<'r>(db: &State<Database>,  user: User) -> String {
+#[get("/userdata")]
+pub async fn user_data<'r>(db: &State<Database>,  user: User) -> String {
     let data = db.get_user_data(&user.id).await.unwrap().data;
     BASE64_STANDARD.encode(data)
 }
+
+#[get("/authenticated", )]
+pub async fn authenticated<'r>(_user: User) {}

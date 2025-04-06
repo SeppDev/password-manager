@@ -15,7 +15,7 @@ impl Fairing for CORS {
 
     async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
         #[cfg(not(debug_assertions))]
-        let domain = std::env::var("DOMAIN").unwrap();
+        let domain = std::env::var("DOMAIN").unwrap_or("*".into());
 
         #[cfg(debug_assertions)]
         let domain = std::env::var("TEST_DOMAIN").unwrap_or("*".into());

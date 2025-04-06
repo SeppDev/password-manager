@@ -24,7 +24,7 @@ pub struct UserData {
     pub data: Vec<u8>,
 }
 
-use super::db_config::{DATA_TABLE, SESSIONS_TABLE, USERS_TABLE};
+use super::db_config::{SESSIONS_TABLE, USERS_TABLE};
 
 impl Database {
     pub async fn create_account(

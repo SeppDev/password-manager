@@ -7,9 +7,12 @@ export default defineConfig({
     plugins: [svelte(), crx({ manifest })],
     server: {
         port: 5173,
-        strictPort: true,
+        strictPort: false,
         hmr: {
             clientPort: 5173,
         },
     },
+    build: {
+        sourcemap: true,
+    }
 });

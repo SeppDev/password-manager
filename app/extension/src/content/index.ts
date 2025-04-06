@@ -9,7 +9,7 @@ const config = {
 
     inputCheckInterval: 500,
     inputQueryInterval: 1000,
-}
+};
 
 const found = document.getElementById(id);
 if (found) {
@@ -77,7 +77,6 @@ const knownElements: Array<HTMLElement> = [];
 function handleInput(input: HTMLElement) {
     if (knownElements.includes(input)) return;
     knownElements.push(input);
-
 
     const inputType = input.getAttribute("type");
     if (!activeInput) {

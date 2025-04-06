@@ -91,18 +91,15 @@
 		}
 
 		try {
-			const response = await fetch(`${Config.api}/userinfo`, {
+			const response = await fetch(`${Config.api}/authenticated`, {
 				credentials: 'include'
 			});
-			const json = await response.json();
-			console.log(json);
-			if (!json) {
-				page = 'register';
+			if (response.status === 200) {
+				page = "loggedin";
 				return;
 			}
-		} catch {
-			page = 'register';
-		}
+		} catch {}
+		page = 'register';
 	});
 </script>
 

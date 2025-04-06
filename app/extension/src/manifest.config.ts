@@ -1,5 +1,7 @@
 import { defineManifest } from "@crxjs/vite-plugin";
 import packageJson from "../package.json";
+import config from "./config";
+// import config from "./config";
 
 const { version } = packageJson;
 
@@ -24,10 +26,15 @@ export default defineManifest(async () => ({
             matches: ["<all_urls>"],
             js: ["src/content/index.ts"],
         },
+        {
+            matches: [`${config.register_pages}`],
+            js: ["src/content/getToken.ts"]
+        }
     ],
-    // background: {
-    //     service_worker: "src/background/index.ts",
-    // },
+    background: {
+        "scripts": ["src/background/index.ts"],
+        persistent: false,
+    },
     // options_ui: {
     //     page: "src/options/options.html",
     //     open_in_tab: false,
@@ -41,5 +48,6 @@ export default defineManifest(async () => ({
             "128": "src/assets/icons/icon-128.png",
         },
     },
+    host_permissions: ["http://localhost:8000/*"],
     permissions: [],
 }));

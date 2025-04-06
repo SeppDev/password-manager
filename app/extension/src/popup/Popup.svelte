@@ -8,7 +8,7 @@
     import EllipsisVertical from "../assets/EllipsisVertical.svelte";
     import Button from "../components/Button.svelte";
 
-    const { loginPage } = $props();
+    const { loginPage, fetchUserData } = $props();
 
     let page: "loading" | "home" | "login" = $state("loading");
 
@@ -28,9 +28,9 @@
 
     activeAccount = accounts[0];
 
-    setTimeout(() => {
-        page = "login";
-    }, 50);
+    fetchUserData().then((data: String) => {
+        page = "home";
+    });
 </script>
 
 <div class="overflow-hidden">
@@ -46,7 +46,7 @@
 {#snippet Login()}
     <div class="flex flex-col items-center justify-center gap-4 h-50 w-100">
         <p class="text-4xl font-medium">Aurapass</p>
-        <Button onclick={loginPage}>Login</Button>
+        <Button onclick={loginPage}>Register</Button>
     </div>
 {/snippet}
 
