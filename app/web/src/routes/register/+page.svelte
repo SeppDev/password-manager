@@ -80,7 +80,7 @@
 
 	function signout() {
 		document.cookie = 'token=;expires=Thu, 01 Jan 1970 00:00:01 GMT';
-		page = "register";
+		page = 'register';
 	}
 
 	onMount(async () => {
@@ -95,7 +95,7 @@
 				credentials: 'include'
 			});
 			if (response.status === 200) {
-				page = "loggedin";
+				page = 'loggedin';
 				return;
 			}
 		} catch {}
@@ -135,7 +135,8 @@
 		<button
 			onclick={signout}
 			class="flex items-center justify-center h-10 p-2 px-4 font-bold text-black transition duration-200 bg-blue-500 rounded-full shadow-xl cursor-pointer hover:bg-blue-600"
-		>Signout</button>
+			>Signout</button
+		>
 	{:else}
 		<p class="text-3xl font-black text-white">Oops!</p>
 		<p class="text-white">Something went wrong</p>

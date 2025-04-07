@@ -7,39 +7,46 @@
     import type { Account } from "../types/Account.ts";
     import EllipsisVertical from "../assets/EllipsisVertical.svelte";
     import Button from "../components/Button.svelte";
+    import type { Storage } from "../background";
 
-    const { loginPage, fetchUserData } = $props();
+    const { loginPage } = $props();
 
-    let page: "loading" | "home" | "login" = $state("loading");
+    let page: "loading" | "home" | "login" | "error" = $state("loading");
 
+    let storage: Storage | undefined = $state(undefined);
     let activeAccount: Account | undefined = $state(undefined);
-    let accounts: Array<Account> = $state([]);
 
-    for (let i = 1; i <= 10; i++) {
-        const account: Account = {
-            Title: `Account-${i}`,
-            Username: `User-${i}`,
-            Email: "coolemail@mail.com",
-            URLs: [],
-        };
-
-        accounts.push(account);
-    }
-
-    activeAccount = accounts[0];
-
-    fetchUserData().then((data: String) => {
-        page = "home";
+    browser.runtime.onMessage.addListener((msg) => {
+        if (msg.type !== "storage-update") return;
+        storage = msg.storage as Storage;
     });
+
+    browser.runtime
+        .sendMessage({ type: "sync-storage" })
+        .then(() => {
+            page = "home";
+        })
+        .catch((error) => {
+            page = "error";
+            console.log(error)
+        });
+
+    async function newAccount() {
+        await browser.runtime.sendMessage({})
+    }
 </script>
 
-<div class="overflow-hidden">
+<div class="overflow-hidden min-h-20 min-w-20">
     {#if page === "loading"}
         <Loading />
     {:else if page === "login"}
         <Login />
     {:else if page === "home"}
         <Home />
+    {:else if page === "error"}
+    <div class="flex items-center justify-center">
+        <p>Something went wrong!</p>
+    </div>
     {/if}
 </div>
 
@@ -66,20 +73,22 @@
 {/snippet}
 
 {#snippet Acounts()}
-    <div class="flex overflow-y-auto bg-indigo-950 w-150 h-80">
-        <div class="h-full overflow-y-auto w-50">
-            {#each accounts as account}
-                {@render AccountItem(account)}
-            {/each}
-        </div>
-        {#if activeAccount}
-            {@render AccountInfo(activeAccount)}
-        {:else}
-            <div class="flex items-center justify-center h-full grow-1">
-                <p class="text-gray-500">No account selected</p>
+    {#if storage}
+        <div class="flex overflow-y-auto bg-indigo-950 w-150 h-80">
+            <div class="h-full overflow-y-auto w-50">
+                {#each storage.accounts as account}
+                    {@render AccountItem(account)}
+                {/each}
             </div>
-        {/if}
-    </div>
+            {#if activeAccount}
+                {@render AccountInfo(activeAccount)}
+            {:else}
+                <div class="flex items-center justify-center h-full grow-1">
+                    <p class="text-gray-500">No account selected</p>
+                </div>
+            {/if}
+        </div>
+    {/if}
 {/snippet}
 
 {#snippet AccountInfo(account: Account)}
@@ -135,6 +144,7 @@
             />
         </div>
         <button
+            onclick={newAccount}
             class="flex items-center justify-center h-full duration-200 rounded-full cursor-pointer bg-indigo-950 aspect-square hover:bg-indigo-800"
             ><PlusIcon /></button
         >

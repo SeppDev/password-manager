@@ -1,7 +1,7 @@
 use crate::database::{accounts::User, Database};
 use base64::{prelude::BASE64_STANDARD, Engine};
 use bcrypt::verify;
-use rocket::State;
+use rocket::{data::FromData, State};
 
 mod accounts;
 use accounts::SignupCreds;
@@ -79,6 +79,11 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
 pub async fn user_data<'r>(db: &State<Database>,  user: User) -> String {
     let data = db.get_user_data(&user.id).await.unwrap().data;
     BASE64_STANDARD.encode(data)
+}
+
+#[post("/userdata", data = "<input>")]
+pub async fn update_user_data<'r>(db: &State<Database>, user: User, input: String) -> String {
+    todo!("{input}")
 }
 
 #[get("/authenticated", )]

@@ -3,5 +3,5 @@ export interface Account {
     Email?: String,
     Username?: String,
     Password?: String,
-    URLs: Array<String>
+    URLs: String[]
 }
