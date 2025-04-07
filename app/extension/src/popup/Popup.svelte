@@ -21,18 +21,12 @@
         storage = msg.storage as Storage;
     });
 
-    browser.runtime
-        .sendMessage({ type: "sync-storage" })
-        .then(() => {
-            page = "home";
-        })
-        .catch((error) => {
-            page = "error";
-            console.log(error)
-        });
+    browser.runtime.sendMessage({ type: "sync-storage" }).then(() => {
+        page = "home";
+    });
 
     async function newAccount() {
-        await browser.runtime.sendMessage({})
+        await browser.runtime.sendMessage({});
     }
 </script>
 
@@ -44,9 +38,9 @@
     {:else if page === "home"}
         <Home />
     {:else if page === "error"}
-    <div class="flex items-center justify-center">
-        <p>Something went wrong!</p>
-    </div>
+        <div class="flex items-center justify-center">
+            <p>Something went wrong!</p>
+        </div>
     {/if}
 </div>
 

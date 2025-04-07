@@ -1,15 +1,12 @@
 import { mount } from "svelte";
 import Popup from "./Popup.svelte";
 import config from "../config";
-import type { Storage } from "../background";
 
 async function loginPage() {
     await browser.tabs.create({
         url: `${config.base}/register`,
     });
 }
-
-
 
 async function render() {
     const target = document.getElementById("app");

@@ -1,5 +1,5 @@
-import config from "../config";
 import type { Account } from "../types/Account";
+import config from "../config";
 
 const storage = {
     session_token: "",
@@ -16,7 +16,7 @@ async function sendStorage() {
     });
 }
 
-async function fetchAccounts(): Promise<Storage | undefined> {
+async function fetchStorage(): Promise<Storage | undefined> {
     if (!storage) return;
 
     let response = await fetch(`${config.api}/userdata`, {
@@ -53,13 +53,15 @@ function createAccount() {
 }
 
 
-browser.runtime.onMessage.addListener(async (msg, _, _response) => {
+browser.runtime.onMessage.addListener(async (msg, _, response) => {
     if (msg.type === "session-token") {
         storage.session_token = msg.token;
     } else if (msg.type === "sync-storage") {
         await sendStorage();
     } else if (msg.type === "update-storage") {
         await updateAccounts();
+    } else if (msg.type === "fetch-storage") {
+        await fetchStorage();
     } else if (msg.type === "create-account") {
         createAccount();
         await updateAccounts();

@@ -33,7 +33,7 @@ export default defineManifest(async () => ({
     ],
     background: {
         "scripts": ["src/background/index.ts"],
-        persistent: false,
+        type: "module",
     },
     // options_ui: {
     //     page: "src/options/options.html",
