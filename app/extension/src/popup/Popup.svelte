@@ -7,7 +7,7 @@
     import type { Account } from "../types/Account.ts";
     import EllipsisVertical from "../assets/EllipsisVertical.svelte";
     import Button from "../components/Button.svelte";
-    import type { Storage } from "../background";
+    import type { Storage } from "../background/storageHandler";
 
     const { loginPage } = $props();
 
@@ -15,6 +15,14 @@
 
     let storage: Storage | undefined = $state(undefined);
     let activeAccount: Account | undefined = $state(undefined);
+
+    (async () => {
+        let session = await browser.storage.session.get("storage");
+        storage = session["storage"] as Storage;
+
+        storage.test();
+    })();
+
 
     browser.runtime.onMessage.addListener((msg) => {
         if (msg.type !== "storage-update") return;

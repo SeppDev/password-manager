@@ -14,8 +14,8 @@ const [major, minor, patch] = version
 
 export default defineManifest(async () => ({
     manifest_version: 3,
-    name: "Password Manager",
-    description: "Epic password manager",
+    name: "Aurapass",
+    description: "Secure password manager",
     version: `${major}.${minor}.${patch}`,
     version_name: version,
     icons: {
@@ -49,5 +49,5 @@ export default defineManifest(async () => ({
         },
     },
     host_permissions: ["http://localhost:8000/*"],
-    permissions: [],
+    permissions: ["storage"],
 }));
