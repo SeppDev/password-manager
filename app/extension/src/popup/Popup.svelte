@@ -21,12 +21,12 @@
         storage = msg.storage as Storage;
     });
 
-    browser.runtime.sendMessage({ type: "sync-storage" }).then(() => {
+    browser.runtime.sendMessage({ type: "sync-storage" }).then((response) => {
         page = "home";
     });
 
     async function newAccount() {
-        await browser.runtime.sendMessage({});
+        await browser.runtime.sendMessage({ type: "create-account" });
     }
 </script>
 
@@ -68,7 +68,7 @@
 
 {#snippet Acounts()}
     {#if storage}
-        <div class="flex overflow-y-auto bg-indigo-950 w-150 h-80">
+        <div class="flex overflow-y-auto bg-gray-950 w-150 h-80">
             <div class="h-full overflow-y-auto w-50">
                 {#each storage.accounts as account}
                     {@render AccountItem(account)}
@@ -90,7 +90,7 @@
         <div class="flex w-full h-8 gap-3">
             <b class="grow-1">{account.Title}</b>
             <button
-                class="flex items-center justify-center gap-3 p-4 duration-200 bg-indigo-600 bg-opacity-50 rounded-full cursor-pointer hover:bg-indigo-700"
+                class="flex items-center justify-center gap-3 p-4 duration-200 bg-blue-600 bg-opacity-50 rounded-full cursor-pointer hover:bg-blue-700"
             >
                 <div class="h-4 aspect-square">
                     <EditIcon />
@@ -98,7 +98,7 @@
                 <p>Edit</p>
             </button>
             <button
-                class="flex items-center justify-center duration-200 rounded-full cursor-pointer aspect-square hover:bg-indigo-900"
+                class="flex items-center justify-center duration-200 rounded-full cursor-pointer aspect-square hover:bg-blue-900"
             >
                 <div class="flex items-center justify-center w-4 h-4">
                     <EllipsisVertical />
@@ -114,7 +114,7 @@
 {#snippet AccountItem(account: Account)}
     <button
         onclick={() => (activeAccount = account)}
-        class="flex flex-row items-center justify-start w-full gap-3 p-2 text-center duration-200 cursor-pointer hover:bg-indigo-800"
+        class="flex flex-row items-center justify-start w-full gap-3 p-2 text-center duration-200 cursor-pointer hover:bg-blue-800"
     >
         <div class="h-8 p-1 bg-black rounded-full aspect-square"></div>
         <div class="flex flex-col items-start justify-center h-full">
@@ -130,7 +130,7 @@
             ><MenuIcon /></button
         >
         <div
-            class="w-full h-full font-bold border border-none rounded-full outline-none bg-indigo-950"
+            class="w-full h-full font-bold text-white border border-none rounded-full outline-white bg-none"
         >
             <input
                 class="w-full h-full p-3 font-bold border-none outline-none bg-none"
@@ -139,7 +139,7 @@
         </div>
         <button
             onclick={newAccount}
-            class="flex items-center justify-center h-full duration-200 rounded-full cursor-pointer bg-indigo-950 aspect-square hover:bg-indigo-800"
+            class="flex items-center justify-center h-full duration-200 bg-blue-500 rounded-full cursor-pointer aspect-square hover:bg-blue-600"
             ><PlusIcon /></button
         >
     </div>

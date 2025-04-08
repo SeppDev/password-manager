@@ -82,8 +82,11 @@ pub async fn user_data<'r>(db: &State<Database>,  user: User) -> String {
 }
 
 #[post("/userdata", data = "<input>")]
-pub async fn update_user_data<'r>(db: &State<Database>, user: User, input: String) -> String {
-    todo!("{input}")
+pub async fn update_user_data<'r>(db: &State<Database>, user: User, input: String) -> ApiResponse {
+    let bytes = BASE64_STANDARD.decode(input).unwrap();
+    db.set_user_data(&user.id, &bytes).await.unwrap();
+
+    ApiResponse::NoContent(())
 }
 
 #[get("/authenticated", )]

@@ -102,7 +102,7 @@ impl Database {
             .fetch_one(&self.pool)
             .await
     }
-    pub async fn set_user_data(&self, id: &i64, data: &str) -> sqlx::Result<()> {
+    pub async fn set_user_data(&self, id: &i64, data: &Vec<u8>) -> sqlx::Result<()> {
         let query = format!("UPDATE {USERS_TABLE} SET data = ($1) WHERE id = ($2);");
 
         sqlx::query(&query)

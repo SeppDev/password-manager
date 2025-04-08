@@ -16,7 +16,7 @@ async function sendStorage() {
     });
 }
 
-async function fetchStorage(): Promise<Storage | undefined> {
+async function fetchAccounts(): Promise<Account[] | undefined> {
     if (!storage) return;
 
     let response = await fetch(`${config.api}/userdata`, {
@@ -25,6 +25,8 @@ async function fetchStorage(): Promise<Storage | undefined> {
             "Cookie": `token=${storage.session_token}`,
         },
     });
+
+    if (response.status !== 200) return;
 
     const text = await response.text();
     const data = atob(text);
@@ -35,13 +37,16 @@ async function fetchStorage(): Promise<Storage | undefined> {
 async function updateAccounts() {
     if (!storage) return;
 
+    let data = btoa(JSON.stringify(storage));
+    console.log(data);
+
     let response = await fetch(`${config.api}/userdata`, {
         method: "POST",
         credentials: "same-origin",
         headers: {
             "Cookie": `token=${storage.session_token}`,
         },
-        body: btoa(JSON.stringify(storage))
+        body: data
     });
 }
 
@@ -61,9 +66,12 @@ browser.runtime.onMessage.addListener(async (msg, _, response) => {
     } else if (msg.type === "update-storage") {
         await updateAccounts();
     } else if (msg.type === "fetch-storage") {
-        await fetchStorage();
+        let accounts = await fetchAccounts();
+        if (!accounts) return;
+        storage.accounts = accounts;
     } else if (msg.type === "create-account") {
         createAccount();
+        sendStorage();
         await updateAccounts();
     }
 });

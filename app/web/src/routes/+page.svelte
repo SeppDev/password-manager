@@ -22,7 +22,7 @@
 				>
 			</div>
 		</div>
-		<div class="flex h-full not-sm:hidden aspect-3/2 not-xl:hidden">
+		<div class="flex h-full not-sm:hidden aspect-3/2 not-xl:hidden"> 	
 			<img src={Thumbnail} class="object-cover" alt="thumbnail">
 		</div>
 	</div>
