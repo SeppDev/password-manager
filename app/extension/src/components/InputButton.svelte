@@ -16,7 +16,6 @@
     function selected(name: string) {
         visible = false;
         FillAccount(`${name}@supercoolmail.com`, name, "Password123");
-        // Submit();
     }
     setTimeout(() => {
         page = "home";
@@ -30,7 +29,7 @@
 
     <button
         onclick={(event) => clicked(event.currentTarget)}
-        class="w-full h-full rounded-full cursor-pointer bg-indigo-950 hover:outline-2 hover:outline-indigo-600"
+        class="w-full h-full duration-200 bg-blue-500 rounded-full cursor-pointer hover:outline-2 hover:bg-blue-600"
         aria-label=" "
     >
         <LockIcon />
@@ -39,7 +38,7 @@
     <div class="h-1"></div>
 
     {#if visible}
-        <div class="absolute right-0 bg-indigo-950 min-w-50 min-h-20 rounded-xl">
+        <div class="absolute right-0 bg-blue-500 min-w-50 min-h-20 rounded-xl">
             {#if page === "loading"}
                 <div class="flex items-center justify-center h-20">
                     <div class="h-8">

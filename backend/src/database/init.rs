@@ -41,16 +41,6 @@ impl Database {
 
         self.execute(query).await.unwrap();
 
-        // let query = format!(
-        //     "CREATE TABLE IF NOT EXISTS {data} (
-        //         user_id    BIGINT NOT NULL,
-        //         FOREIGN KEY (user_id) REFERENCES {users}(id),
-        //         data         BYTEA NOT NULL
-        // )"
-        // );
-
-        // self.execute(query).await.unwrap();
-
         let query = format!(
             "CREATE TABLE IF NOT EXISTS {sessions} (
             token      TEXT NOT NULL PRIMARY KEY,

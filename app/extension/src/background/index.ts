@@ -1,6 +1,5 @@
 import type { Account } from "../types/Account";
 import config from "../config";
-import { Storage } from "./storageHandler";
 
 // const storage = {
 //     session_token: "",
@@ -8,11 +7,6 @@ import { Storage } from "./storageHandler";
 //     accounts: [] as Account[]
 // };
 
-const storage = new Storage();
-
-browser.storage.session.set({
-    storage
-});
 
 
 // export type Storage = typeof storage;
