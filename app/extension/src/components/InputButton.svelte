@@ -2,7 +2,7 @@
     import Loader from "./Loader.svelte";
     import LockIcon from "../assets/LockIcon.svelte";
     import AccountsList from "../menu/AccountsList.svelte";
-    import { FillAccount, Submit } from "../content/FillForm";
+    import { FillAccount, Submit } from "../content/fillForm";
     
     type Page = "loading" | "notsigned" | "home";
 

@@ -1,5 +1,6 @@
-import type { Account } from "../types/Account";
+import type { Account } from "../types/account";
 import config from "../config";
+import "./userData";
 
 // const storage = {
 //     session_token: "",

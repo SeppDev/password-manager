@@ -1,4 +1,4 @@
-import { sleep } from "../util/sleep";
+import { sleep } from "../common/sleep";
 
 function getCookie(cname: String) {
     let name = cname + "=";

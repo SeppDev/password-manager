@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Account } from "../types/Account.ts";
+    import type { Account } from "../types/account";
 
     const { accounts, selected }: {
       accounts: string[],
