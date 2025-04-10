@@ -3,8 +3,18 @@ import { openLoginPage } from "../common/loginPage";
 import config from "../config";
 import type { Account } from "../types/account";
 import Popup from "../popup/Popup.svelte";
+import { BrowserMessages } from "../common/browserMessages";
 
-let accounts: Account[] = [];
+export const accountsSync = new BrowserMessages<void, Accounts>("accountsSync");
+
+
+let accounts = [] as Account[];
+export type Accounts = typeof accounts;
+
+accountsSync.onMessage(async () => {
+    return accounts;
+})
+
 let authenticated = false;
 let session_token: String | undefined = undefined;
 
@@ -19,30 +29,19 @@ let session_token: String | undefined = undefined;
     session_token = token;
 })();
 
-
-
 export type UserDataSync = {
     type: "sync";
-    accounts: Account[];
+    accounts: Accounts;
 };
-
-async function render(event: Event) {
-    console.log()
-    const target = event.target;
-
-    // const target = document.getElementById("app");
-    if (!target) return;
-
-    mount(Popup, { target });
-}
-
-document.addEventListener("DOMContentLoaded", render);
-
 
 browser.runtime.onConnect.addListener(async (port) => {
     if (port.name !== "userdata") return;
-    console.log(port);
+
 });
+
+browser.runtime.onMessage.addListener((message) => {
+
+})
 
 async function createAccount() {
     let accounts = await getAccounts();

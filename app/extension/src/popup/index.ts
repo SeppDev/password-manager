@@ -9,4 +9,4 @@ async function render() {
     mount(Popup, { target });
 }
 
-// document.addEventListener("DOMContentLoaded", render);
+document.addEventListener("DOMContentLoaded", render);

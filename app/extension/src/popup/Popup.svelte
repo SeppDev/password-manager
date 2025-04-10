@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { writable } from "svelte/store";
+
     import MenuIcon from "../assets/MenuIcon.svelte";
     import PlusIcon from "../assets/PlusIcon.svelte";
     import Loader from "../components/Loader.svelte";
@@ -8,15 +10,23 @@
     import EllipsisVertical from "../assets/EllipsisVertical.svelte";
     import Button from "../components/Button.svelte";
     import { openLoginPage } from "../common/loginPage";
+    import { type Accounts, accountsSync } from "../background/userData";
 
     let page: "loading" | "home" | "login" | "error" = $state("loading");
 
     let activeAccount: Account | undefined = $state(undefined);
-    const userData: { accounts: Account[] } = $state({
-        accounts: [],
+
+    let port = browser.runtime.connect({ name: "userdata" });
+    port.onMessage.addListener((message) => {
+        console.log(message);
     });
 
-
+    let accounts: Accounts | undefined = $state(undefined);
+    accountsSync.sendMessage().then((value) => {
+      console.log(accounts);
+        accounts = value;
+        page = "home";
+    });
 </script>
 
 <div class="overflow-hidden min-h-20 min-w-20">
@@ -58,9 +68,11 @@
 {#snippet Acounts()}
     <div class="flex overflow-y-auto bg-gray-950 w-150 h-80">
         <div class="h-full overflow-y-auto w-50">
-            {#each userData.accounts as account}
-                {@render AccountItem(account)}
-            {/each}
+            {#if accounts}
+                {#each accounts as account}
+                    {@render AccountItem(account)}
+                {/each}
+            {/if}
         </div>
         {#if activeAccount}
             {@render AccountInfo(activeAccount)}
