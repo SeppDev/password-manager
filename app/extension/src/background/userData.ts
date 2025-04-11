@@ -5,14 +5,13 @@ import type { Account } from "../types/account";
 import Popup from "../popup/Popup.svelte";
 import { BrowserMessages } from "../common/browserMessages";
 
-export const accountsSync = new BrowserMessages<void, Accounts>("accountsSync");
+export const accountsSync = new BrowserMessages<Accounts>("accountsSync");
 
 
 let accounts = [] as Account[];
 export type Accounts = typeof accounts;
 
 accountsSync.onMessage(async () => {
-    return accounts;
 })
 
 let authenticated = false;
@@ -36,12 +35,8 @@ export type UserDataSync = {
 
 browser.runtime.onConnect.addListener(async (port) => {
     if (port.name !== "userdata") return;
-
+    return accounts;
 });
-
-browser.runtime.onMessage.addListener((message) => {
-
-})
 
 async function createAccount() {
     let accounts = await getAccounts();

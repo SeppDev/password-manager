@@ -16,14 +16,8 @@
 
     let activeAccount: Account | undefined = $state(undefined);
 
-    let port = browser.runtime.connect({ name: "userdata" });
-    port.onMessage.addListener((message) => {
-        console.log(message);
-    });
-
     let accounts: Accounts | undefined = $state(undefined);
-    accountsSync.sendMessage().then((value) => {
-      console.log(accounts);
+    accountsSync.onMessage(async (value) => {
         accounts = value;
         page = "home";
     });
