@@ -109,7 +109,7 @@
 >
 	{#if page === 'register'}
 		<form
-			class="flex flex-col items-center justify-center gap-3 p-6 shadow-xl not-dark:bg-white dark:bg-neutral-900 w-100 dark:shadow-black rounded-xl"
+			class="flex flex-col items-center justify-center gap-3 p-6 shadow-xl not-dark:bg-white dark:bg-neutral-900 w-100 not-sm:rounded-none not-sm:size-full dark:shadow-black rounded-xl"
 		>
 			<p class="w-full text-2xl font-bold text-left">Login</p>
 			{#if errorMessage !== undefined}
@@ -128,7 +128,7 @@
 			{/if}
 		</form>
 	{:else if page === 'loading'}
-		<div class="w-20 h- aspect-square">
+		<div class="w-20 aspect-square">
 			<Loader />
 		</div>
 	{:else if page === 'loggedin'}
@@ -158,7 +158,6 @@
 		</p>
 		<input
 			id={title}
-			name={title}
 			{type}
 			class="z-10 w-full px-4 py-3 text-base duration-100 rounded-lg dark:text-white not-dark:black outline-1 outline-neutral-400 focus:outline-blue-500 ring-blue-400 focus:ring-2"
 		/>

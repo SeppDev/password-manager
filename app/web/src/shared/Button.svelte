@@ -30,25 +30,25 @@
 	}
 </script>
 
-<!-- {#if href}
+{#if href}
 	<a
 		{href}
 		onclick={click}
-		class="flex items-center justify-center gap-4 px-4 py-4 text-xl font-semibold text-white duration-200 bg-blue-600 rounded-lg cursor-pointer text-inherits not-dark:hover:bg-blue-800 size-full dark:text-black dark:hover:bg-blue-500"
+		class="flex items-center justify-center gap-4 px-4 py-3 text-xl font-semibold text-white duration-200 bg-blue-600 rounded-lg cursor-pointer py text-inherits not-dark:hover:bg-blue-800 size-full dark:text-black dark:hover:bg-blue-500"
 	>
 		<p>{text}</p>
 	</a>
-{:else} -->
+{:else}
 	<button
 		onclick={click}
 		{type}
-		class="flex items-center justify-center gap-4 px-4 py-4 text-xl font-semibold text-white duration-200 bg-blue-600 rounded-lg cursor-pointer text-inherits not-dark:hover:bg-blue-800 size-full dark:text-black dark:hover:bg-blue-500"
+		class="flex items-center justify-center w-full gap-4 px-4 py-3 text-xl font-semibold text-white duration-200 bg-blue-600 rounded-lg cursor-pointer text-inherits not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
 	>
-		<p>{text}</p>
 		{#if debounce === true}
-			<div class="h-full">
+			<div class="h-full p-1">
 				<Loader />
 			</div>
 		{/if}
+		<p class="font-semibold">{text}</p>
 	</button>
-<!-- {/if} -->
+{/if}
