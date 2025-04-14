@@ -12,6 +12,7 @@ let accounts = [] as Account[];
 export type Accounts = typeof accounts;
 
 accountsSync.onMessage(async () => {
+    
 })
 
 let authenticated = false;

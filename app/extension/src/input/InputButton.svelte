@@ -1,15 +1,15 @@
 <script lang="ts">
-    import Loader from "./Loader.svelte";
+    import Loader from "../components/Loader.svelte";
     import LockIcon from "../assets/LockIcon.svelte";
-    import AccountsList from "../menu/AccountsList.svelte";
+    import AccountsList from "./AccountsList.svelte";
     import { FillAccount, Submit } from "../content/fillForm";
-    
+
     type Page = "loading" | "notsigned" | "home";
 
     let visible = $state(false);
     let page: Page = $state("loading");
 
-    const accounts = ["SeppDev", "SkibidiToiletFan", "student2"];
+    const accounts = ["SeppDev", "SkibidiToiletFan", "student"];
     function clicked(button: HTMLElement) {
         visible = !visible;
     }
@@ -20,12 +20,12 @@
     setTimeout(() => {
         page = "home";
     }, 1);
-</script>   
+</script>
 
-<div class="w-full h-full z-100">
-    <style>
+<div class="absolute z-10 w-full h-full">
+     <style>
         @import "tailwindcss";
-    </style>
+     </style>
 
     <button
         onclick={(event) => clicked(event.currentTarget)}

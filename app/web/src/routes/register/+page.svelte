@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Loader from '../../components/Loader.svelte';
+	import Loader from '../../shared/Loader.svelte';
 	import Config from '../../config';
+	import Button from '../../shared/Button.svelte';
 
 	type Response = {
 		message?: String;
@@ -104,15 +105,15 @@
 </script>
 
 <div
-	class="flex flex-col items-center justify-center gap-4 inset-shadow-black-2x h-dvh w-dvw bg-gray-950"
+	class="flex flex-col items-center justify-center gap-10 h-dvh w-dvw"
 >
 	{#if page === 'register'}
 		<form
-			class="flex flex-col items-center justify-center gap-3 p-4 w-70 rounded-4xl bg-neutral-900"
+			class="flex flex-col items-center justify-center gap-3 p-6 shadow-xl not-dark:bg-white dark:bg-neutral-900 w-100 dark:shadow-black rounded-xl"
 		>
-			<p class="text-2xl font-bold text-left text-white">Login</p>
+			<p class="w-full text-2xl font-bold text-left">Login</p>
 			{#if errorMessage !== undefined}
-				<div class="w-full text-black bg-red-500 rounded-2xl outline-2 outline-red-600">
+				<div class="w-full bg-red-200 rounded-lg not-dark:text-red-800 dark:text-red-100 dark:bg-red-500 not-dark:outline-1 not-dark:outline-red-400">
 					<p class="px-4 py-2">{errorMessage}</p>
 				</div>
 			{/if}
@@ -127,38 +128,22 @@
 			{/if}
 		</form>
 	{:else if page === 'loading'}
-		<div class="w-20 h-20 aspect-square">
+		<div class="w-20 h- aspect-square">
 			<Loader />
 		</div>
 	{:else if page === 'loggedin'}
-		<p class="text-3xl text-white">Logged in</p>
-		<button
-			onclick={signout}
-			class="flex items-center justify-center h-10 p-2 px-4 font-bold text-black transition duration-200 bg-blue-500 rounded-full shadow-xl cursor-pointer hover:bg-blue-600"
-			>Signout</button
-		>
+		<p class="text-4xl">Logged in</p>
+		<div>
+			<Button onclick={signout} text="Signout"></Button>
+		</div>
 	{:else}
-		<p class="text-3xl font-black text-white">Oops!</p>
-		<p class="text-white">Something went wrong</p>
+		<p class="text-3xl font-black">Oops!</p>
+		<p>Something went wrong</p>
 	{/if}
 </div>
 
-{#snippet loaderButton(text: String, onclick: (event: Event) => Promise<void>, other: String)}
-	<button
-		type="submit"
-		{onclick}
-		class="flex items-center justify-center w-full h-10 p-2 font-bold text-black transition duration-200 bg-blue-500 rounded-full shadow-xl cursor-pointer hover:bg-blue-600"
-	>
-		{#if loading}
-			<span class="left-0 flex items-center justify-center h-full aspect-square">
-				<Loader color="rgb(0, 0, 0)" />
-			</span>
-		{:else}
-			<span class="text-center size-full">
-				{text}
-			</span>
-		{/if}
-	</button>
+{#snippet loaderButton(text: string, onclick: (event: Event) => Promise<void>, other: String)}
+	<Button type="submit" {onclick} {text} />
 	<button
 		onclick={switchButtonState}
 		class="text-sm text-center text-blue-500 duration-100 cursor-pointer hover:text-blue-600"
@@ -168,14 +153,14 @@
 
 {#snippet input(title: string, type: 'text' | 'password' | 'email')}
 	<div class="w-full">
-		<p class="relative px-2 py-0 text-sm left-4 top-2 w-fit bg-neutral-900 text-neutral-500">
+		<p class="relative px-2 py-0 text-sm not-dark:bg-white dark:bg-neutral-900 left-4 top-2 w-fit text-neutral-400">
 			{title}
 		</p>
 		<input
 			id={title}
 			name={title}
 			{type}
-			class="z-10 w-full rounded-full px-4 py-1.5 text-base text-white outline-1 outline-neutral-500"
+			class="z-10 w-full px-4 py-3 text-base duration-100 rounded-lg dark:text-white not-dark:black outline-1 outline-neutral-400 focus:outline-blue-500 ring-blue-400 focus:ring-2"
 		/>
 	</div>
 {/snippet}
