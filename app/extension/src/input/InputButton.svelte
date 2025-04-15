@@ -13,6 +13,7 @@
     function clicked(button: HTMLElement) {
         visible = !visible;
     }
+    
     function selected(name: string) {
         visible = false;
         FillAccount(`${name}@supercoolmail.com`, name, "Password123");
@@ -22,14 +23,14 @@
     }, 1);
 </script>
 
-<div class="absolute z-10 w-full h-full">
+<div class="absolute z-10 w-full h-full not-dark:text-white dark:text-black">
      <style>
         @import "tailwindcss";
      </style>
 
     <button
         onclick={(event) => clicked(event.currentTarget)}
-        class="w-full h-full duration-200 bg-blue-500 rounded-full cursor-pointer hover:outline-2 hover:bg-blue-600"
+        class="w-full h-full duration-200 bg-blue-600 rounded-full cursor-pointer stroke-white dark:stroke-black dark:hover:bg-blue-400 not-dark:hover:bg-blue-800"
         aria-label=" "
     >
         <LockIcon />
@@ -38,7 +39,7 @@
     <div class="h-1"></div>
 
     {#if visible}
-        <div class="absolute right-0 bg-blue-500 min-w-50 min-h-20 rounded-xl">
+        <div class="absolute right-0 text-white bg-blue-600 min-w-50 min-h-20 rounded-xl dark:text-black">
             {#if page === "loading"}
                 <div class="flex items-center justify-center h-20">
                     <div class="h-8">

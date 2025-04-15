@@ -2,15 +2,14 @@
     style="aspect-ratio: 1; height: 100%; width: 100%; display: flex; justify-content: center; align-items: center;"
 >
     <svg
+        class="stroke-inherit"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         height="60%"
         viewBox="0 0 24 24"
-        stroke="rgb(0,0,0)"
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
-        class="lucide lucide-key-round"
         ><path
             d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"
         /><circle

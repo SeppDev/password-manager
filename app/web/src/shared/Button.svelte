@@ -1,15 +1,19 @@
 <script lang="ts">
+	import type { Component, SvelteComponent } from 'svelte';
 	import Loader from './Loader.svelte';
 	import type { FunctionEvent } from './types';
+	import { render } from 'svelte/server';
 
 	const {
 		onclick,
 		text,
 		type,
-		href
+		href,
+		icon
 	}: {
 		onclick?: FunctionEvent;
-		text: string;
+		text?: string;
+		icon?: any;
 		type?: 'submit' | 'button' | 'reset';
 		href?: string;
 	} = $props();
@@ -30,25 +34,22 @@
 	}
 </script>
 
-{#if href}
-	<a
-		{href}
-		onclick={click}
-		class="flex items-center justify-center gap-4 px-4 py-3 text-xl font-semibold text-white duration-200 bg-blue-600 rounded-lg cursor-pointer py text-inherits not-dark:hover:bg-blue-800 size-full dark:text-black dark:hover:bg-blue-500"
-	>
-		<p>{text}</p>
-	</a>
-{:else}
-	<button
-		onclick={click}
-		{type}
-		class="flex items-center justify-center w-full gap-4 px-4 py-3 text-xl font-semibold text-white duration-200 bg-blue-600 rounded-lg cursor-pointer text-inherits not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
-	>
-		{#if debounce === true}
-			<div class="h-full p-1">
-				<Loader />
+<button
+	onclick={click}
+	{type}
+	class="flex items-center justify-center w-full gap-4 px-4 text-xl font-semibold text-white duration-200 bg-blue-600 rounded-lg cursor-pointer h-13 text-inherits not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
+>
+	{#if debounce === true}
+		<div class="h-6">
+			<Loader />
+		</div>
+	{/if}
+
+	<p class="font-semibold">{text}</p>
+
+	<!-- {#if icon}
+			<div class="h-full aspect-square">
+				{@render icon()}
 			</div>
-		{/if}
-		<p class="font-semibold">{text}</p>
-	</button>
-{/if}
+		{/if} -->
+</button>
