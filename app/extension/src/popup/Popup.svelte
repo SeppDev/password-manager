@@ -1,48 +1,64 @@
 <script lang="ts">
-    import { writable } from "svelte/store";
+    import { IsAuthenticated, logout } from "../user/userData";
 
-    import MenuIcon from "../assets/MenuIcon.svelte";
-    import PlusIcon from "../assets/PlusIcon.svelte";
+    // import { writable } from "svelte/store";
+    // import type { Writable } from "svelte/store";
+
     import Loader from "../components/Loader.svelte";
-    import EditIcon from "../assets/EditIcon.svelte";
-
-    import type { Account } from "../types/account.ts";
-    import EllipsisVertical from "../assets/EllipsisVertical.svelte";
     import Button from "../components/Button.svelte";
-    import { openLoginPage } from "../common/loginPage";
-    import { type Accounts, accountsSync } from "../background/userData";
 
-    let page: "loading" | "home" | "login" | "error" = $state("loading");
+    // import type { Account } from "../user/account.ts";
+    // import { onMount } from "svelte";
+    // import Login from "./Login.svelte";
 
-    let activeAccount: Account | undefined = $state(undefined);
+    let page: "loading" | "home" | "error" = $state("loading");
+    let { authenticate } = $props();
 
-    let accounts: Accounts | undefined = $state(undefined);
-    accountsSync.onMessage(async (value) => {
-        accounts = value;
+    async function main() {
+        const authenticated = await IsAuthenticated();
+        if (!authenticated) {
+            authenticate();
+            return;
+        }
         page = "home";
-    });
+    }
+    main();
+
+    // let activeAccount: Account | undefined = $state(undefined);
+    // let accounts: Account[] = $state([]);
+
+    // onMount(async () => {
+    //     const authenticated = await IsAuthenticated();
+    //     page.set(authenticated ? "home" : "login");
+
+    //     async function updateAccounts() {
+    //         const accs = getAccounts();
+    //     }
+    //     browser.storage.onChanged.addListener(updateAccounts);
+    //     updateAccounts();
+    // });
 </script>
 
 <div class="overflow-hidden min-h-20 min-w-20">
+    <p>Popup</p>
     {#if page === "loading"}
         <Loading />
-    {:else if page === "login"}
-        <Login />
     {:else if page === "home"}
-        <Home />
-    {:else if page === "error"}
+        <p>Home</p>
+        <Button
+            text="logout"
+            onclick={() => {
+                logout();
+                authenticate();
+                window.close();
+            }}
+        />
+    {:else}
         <div class="flex items-center justify-center">
             <p>Something went wrong!</p>
         </div>
     {/if}
 </div>
-
-{#snippet Login()}
-    <div class="flex flex-col items-center justify-center gap-4 h-50 w-100">
-        <p class="text-4xl font-medium">Aurapass</p>
-        <Button onclick={openLoginPage}>Register</Button>
-    </div>
-{/snippet}
 
 {#snippet Loading()}
     <div class="flex items-center justify-center w-20 h-20">
@@ -52,14 +68,17 @@
     </div>
 {/snippet}
 
+<!--
+
 {#snippet Home()}
     <div class="flex flex-col w-auto h-auto">
+        <p>Home</p>
         <Topbar />
         <Acounts />
     </div>
-{/snippet}
+{/snippet} -->
 
-{#snippet Acounts()}
+<!-- {#snippet Acounts()}
     <div class="flex overflow-y-auto bg-gray-950 w-150 h-80">
         <div class="h-full overflow-y-auto w-50">
             {#if accounts}
@@ -135,4 +154,4 @@
             ><PlusIcon /></button
         >
     </div>
-{/snippet}
+{/snippet} -->

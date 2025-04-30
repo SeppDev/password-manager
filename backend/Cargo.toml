@@ -8,13 +8,14 @@ rocket = "0.5.1"
 serde = "1.0.219"
 serde_json = "1.0.140"
 tokio = "1.44.2"
-bcrypt = "0.17"
 dotenv = "0.15.0"
 anyhow = "1.0.98"
 fake = "4.3.0"
 base64 = "0.22.1"
 rand = "0.9.1"
 sha2 = "0.10.8"
+argon2 = "0.5.3"
+# rand_core = "0.9.3"
 
 [dependencies.chrono]
 version = "0.4.40"
@@ -23,4 +24,3 @@ features = ["serde"]
 [dependencies.sqlx]
 version = "0.8.5"
 features = ["postgres", "macros", "chrono", "migrate",  "runtime-tokio", "tls-native-tls", "derive"]
-

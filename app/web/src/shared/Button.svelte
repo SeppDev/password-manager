@@ -1,25 +1,30 @@
 <script lang="ts">
-	import type { Component, SvelteComponent } from 'svelte';
+	import type { Component } from 'svelte';
 	import Loader from './Loader.svelte';
 	import type { FunctionEvent } from './types';
-	import { render } from 'svelte/server';
 
 	const {
 		onclick,
 		text,
 		type,
+		fill_width,
 		href,
-		icon
+		Icon
 	}: {
 		onclick?: FunctionEvent;
 		text?: string;
-		icon?: any;
+		fill_width?: boolean;
+		Icon?: Component;
 		type?: 'submit' | 'button' | 'reset';
 		href?: string;
 	} = $props();
 
 	let debounce = $state(false);
 	async function click(event: Event) {
+		if (href) {
+			window.location = href as string & Location;
+		}
+
 		if (!onclick) return;
 		if (debounce) return;
 		debounce = true;
@@ -37,19 +42,18 @@
 <button
 	onclick={click}
 	{type}
-	class="flex items-center justify-center w-full gap-4 px-4 text-xl font-semibold text-white duration-200 bg-blue-600 rounded-lg cursor-pointer h-13 text-inherits not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
+	class="{`base ${fill_width ? 'w-full' : ''}`} text-inherits flex min-h-13 cursor-pointer items-center justify-center gap-4 rounded-lg bg-blue-600 px-4 text-xl font-semibold text-white duration-200 not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
 >
 	{#if debounce === true}
-		<div class="h-6">
+		<span class="aspect-square h-1/2">
 			<Loader />
-		</div>
+		</span>
+	{/if}
+	{#if Icon && debounce == false}
+		<span class="aspect-square h-1/2">
+			<Icon />
+		</span>
 	{/if}
 
 	<p class="font-semibold">{text}</p>
-
-	<!-- {#if icon}
-			<div class="h-full aspect-square">
-				{@render icon()}
-			</div>
-		{/if} -->
 </button>

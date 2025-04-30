@@ -1,0 +1,48 @@
+import config from "../config";
+import type { Account } from "./account";
+
+export async function getToken(): Promise<string | undefined> {
+  const storage = await browser.storage.local.get("token");
+  return storage.token;
+}
+
+export async function setToken(token: string) {
+  await browser.storage.local.set({ token });
+}
+
+export async function logout() {
+  await browser.storage.local.set({ token: undefined });
+}
+
+export async function IsAuthenticated(token?: string): Promise<boolean> {
+  token = token || (await getToken());
+  if (!token) return false;
+
+  let response = await fetch(`${config.api}/authenticated`, {
+    headers: {
+      token,
+    },
+  });
+
+  return response.status === 200;
+}
+
+export async function syncUserData(): Promise<boolean> {
+  const token = await getToken();
+  if (!token) return false;
+
+  const response = await fetch(`${config.api}/userdata`, {
+    headers: {
+      token,
+    },
+  });
+
+  const json = await response.text();
+  // console.log(json);
+
+  return true;
+}
+
+export async function getAccounts(): Promise<Account[]> {
+  return [];
+}

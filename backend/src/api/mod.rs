@@ -1,7 +1,11 @@
-use crate::database::{accounts::User, Database};
-use base64::{prelude::BASE64_STANDARD, Engine};
-use bcrypt::verify;
-use rocket::{data::FromData, State};
+use crate::database::{Database, accounts::User};
+use base64::{Engine, prelude::BASE64_STANDARD};
+use rocket::State;
+
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHash, PasswordVerifier},
+};
 
 mod accounts;
 use accounts::SignupCreds;
@@ -10,14 +14,11 @@ use serde_json::json;
 mod response;
 use response::{ApiResponse, ApiResult};
 
-#[derive(Default)]
-pub(crate) enum ContentLanguage {
-    #[default]
-    English,
-    Dutch,
-}
-
-
+// impl<T> Into<sqlx::Result<T>> for sqlx::Result<T, ApiResponse> {
+//     fn into(self) -> sqlx::Result<T> {
+//         todo!()
+//     }
+// }
 
 #[post("/signup")]
 pub async fn signup<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResult {
@@ -26,25 +27,25 @@ pub async fn signup<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResu
     match db.get_user_by_name(&username).await {
         Ok(_) => return ApiResponse::ok_message("Account already exists").into(),
         Err(err) => match err {
-            sqlx::Error::RowNotFound => {},
-            _ => return ApiResponse::ok_message(err.to_string()).into()
-        }
+            sqlx::Error::RowNotFound => {}
+            _ => return ApiResponse::ok_message(err.to_string()).into(),
+        },
     };
 
     let _result = match db.create_account(&username, password).await {
         Ok(r) => r,
-        Err(err) => return ApiResponse::err_message(err.to_string()).into()
+        Err(err) => return ApiResponse::err_message(err.to_string()).into(),
     };
 
     let user = match db.get_user_by_name(&username).await {
         Ok(u) => u,
-        Err(err) => return ApiResponse::err_message(err.to_string()).into()
+        Err(err) => return ApiResponse::err_message(err.to_string()).into(),
     };
 
     let token = match db.create_session(&user.id).await {
         Ok(t) => t,
-        Err(_) => return ApiResponse::err_message("Failed to create session token").into()
-    };      
+        Err(_) => return ApiResponse::err_message("Failed to create session token").into(),
+    };
 
     let json = json!({"token": token});
 
@@ -54,7 +55,6 @@ pub async fn signup<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResu
 #[post("/login")]
 pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResult {
     let (username, password) = creds.may_fail()?;
-
     let user = db.get_user_by_name(&username).await;
     let user = match user {
         Ok(u) => u,
@@ -62,11 +62,16 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
             return match err {
                 sqlx::Error::RowNotFound => ApiResponse::ok_message("User not found"),
                 _ => ApiResponse::err_message(err.to_string()),
-            }.into();
+            }
+            .into();
         }
     };
 
-    let correct_password = verify(&password, &user.password).unwrap();
+    let parsed_hash = PasswordHash::new(&user.password).unwrap();
+    let correct_password = Argon2::default()
+        .verify_password(password.as_bytes(), &parsed_hash)
+        .is_ok();
+
     if !correct_password {
         return ApiResponse::ok_message("Wrong password").into();
     }
@@ -76,7 +81,7 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
 }
 
 #[get("/userdata")]
-pub async fn user_data<'r>(db: &State<Database>,  user: User) -> String {
+pub async fn user_data<'r>(db: &State<Database>, user: User) -> String {
     let data = db.get_user_data(&user.id).await.unwrap().data;
     BASE64_STANDARD.encode(data)
 }
@@ -89,5 +94,14 @@ pub async fn update_user_data<'r>(db: &State<Database>, user: User, input: Strin
     ApiResponse::NoContent(())
 }
 
-#[get("/authenticated", )]
+#[get("/user/exists/<username>")]
+pub async fn user_exists<'r>(db: &State<Database>, username: &str) -> ApiResponse {
+    match db.get_user_by_name(username).await {
+        Ok(_) => return ApiResponse::ok_message("true"),
+        Err(e) => println!("{e:#?}"),
+    }
+    ApiResponse::ok_message("false")
+}
+
+#[get("/authenticated")]
 pub async fn authenticated<'r>(_user: User) {}

@@ -5,11 +5,11 @@
 	import Button from '../../shared/Button.svelte';
 
 	type Response = {
-		message?: String;
-		token?: String;
+		message?: string;
+		token?: string;
 	};
 
-	let errorMessage: String | undefined = $state(undefined);
+	let errorMessage: string | undefined = $state(undefined);
 	let loading = $state(false);
 	let buttonState: 'login' | 'signup' = $state('login');
 	let page: 'loading' | 'loggedin' | 'register' = $state('loading');
@@ -99,21 +99,23 @@
 				page = 'loggedin';
 				return;
 			}
-		} catch {}
+		} catch (e) {
+			console.log(e);
+		}
 		page = 'register';
 	});
 </script>
 
-<div
-	class="flex flex-col items-center justify-center gap-10 h-dvh w-dvw"
->
+<div class="flex h-dvh w-dvw flex-col items-center justify-center gap-10">
 	{#if page === 'register'}
 		<form
-			class="flex flex-col items-center justify-center gap-3 p-6 shadow-xl not-dark:bg-white dark:bg-neutral-900 w-100 not-sm:rounded-none not-sm:size-full dark:shadow-black rounded-xl"
+			class="flex w-100 flex-col items-center justify-center gap-3 rounded-xl p-6 shadow-xl not-sm:size-full not-sm:rounded-none not-dark:bg-white dark:bg-neutral-900 dark:shadow-black"
 		>
-			<p class="w-full text-2xl font-bold text-left">Login</p>
+			<p class="w-full text-left text-2xl font-bold">Login</p>
 			{#if errorMessage !== undefined}
-				<div class="w-full bg-red-200 rounded-lg not-dark:text-red-800 dark:text-red-100 dark:bg-red-500 not-dark:outline-1 not-dark:outline-red-400">
+				<div
+					class="w-full rounded-lg bg-red-200 not-dark:text-red-800 not-dark:outline-1 not-dark:outline-red-400 dark:bg-red-500 dark:text-red-100"
+				>
 					<p class="px-4 py-2">{errorMessage}</p>
 				</div>
 			{/if}
@@ -128,13 +130,17 @@
 			{/if}
 		</form>
 	{:else if page === 'loading'}
-		<div class="w-20 aspect-square">
+		<div class="aspect-square w-20">
 			<Loader />
 		</div>
 	{:else if page === 'loggedin'}
 		<p class="text-4xl">Logged in</p>
-		<div>
+		<div class="flex flex-col items-center gap-4">
 			<Button onclick={signout} text="Signout"></Button>
+			<div class="NotDetected flex flex-col items-center gap-2 rounded-xl bg-neutral-800 p-4">
+				<p class="font-2xl font-bold text-red-500">Extension not detected</p>
+				<Button href="download" text="Download"></Button>
+			</div>
 		</div>
 	{:else}
 		<p class="text-3xl font-black">Oops!</p>
@@ -142,24 +148,26 @@
 	{/if}
 </div>
 
-{#snippet loaderButton(text: string, onclick: (event: Event) => Promise<void>, other: String)}
-	<Button type="submit" {onclick} {text} />
+{#snippet loaderButton(text: string, onclick: (event: Event) => Promise<void>, other: string)}
+	<Button type="submit" {onclick} {text} fill_width={true} />
 	<button
 		onclick={switchButtonState}
-		class="text-sm text-center text-blue-500 duration-100 cursor-pointer hover:text-blue-600"
+		class="cursor-pointer text-center text-sm text-blue-500 duration-100 hover:text-blue-600"
 		>{other}</button
 	>
 {/snippet}
 
 {#snippet input(title: string, type: 'text' | 'password' | 'email')}
 	<div class="w-full">
-		<p class="relative px-2 py-0 text-sm not-dark:bg-white dark:bg-neutral-900 left-4 top-2 w-fit text-neutral-400">
+		<p
+			class="relative top-2 left-4 w-fit px-2 py-0 text-sm text-neutral-400 not-dark:bg-white dark:bg-neutral-900"
+		>
 			{title}
 		</p>
 		<input
 			id={title}
 			{type}
-			class="z-10 w-full px-4 py-3 text-base duration-100 rounded-lg dark:text-white not-dark:black outline-1 outline-neutral-400 focus:outline-blue-500 ring-blue-400 focus:ring-2"
+			class="not-dark:black z-10 w-full rounded-lg px-4 py-3 text-base ring-blue-400 outline-1 outline-neutral-400 duration-100 focus:ring-2 focus:outline-blue-500 dark:text-white"
 		/>
 	</div>
 {/snippet}

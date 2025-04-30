@@ -1,7 +1,59 @@
 <script lang="ts">
-    let { onclick, children } = $props();
+    import type { Component } from "svelte";
+    import Loader from "./Loader.svelte";
+    import type { FunctionEvent } from "./types";
+
+    const {
+        onclick,
+        text = "Button",
+        type = "button",
+        fill_width = true,
+        prevent_default = true,
+        href,
+        Icon,
+    }: {
+        onclick?: FunctionEvent;
+        text?: string;
+        fill_width?: boolean;
+        prevent_default?: boolean;
+        Icon?: Component;
+        type?: "submit" | "button" | "reset";
+        href?: string;
+    } = $props();
+
+    let debounce = $state(false);
+    async function click(event: Event) {
+        if (prevent_default) event.preventDefault();
+        if (href) window.location = href as string & Location;
+        if (!onclick) return;
+        if (debounce) return;
+        debounce = true;
+
+        try {
+            await onclick(event);
+        } catch (e) {
+            console.error(e);
+        }
+
+        debounce = false;
+    }
 </script>
 
-<button {onclick} class="px-4 py-2 font-bold text-black duration-200 bg-blue-500 rounded-full shadow-xl cursor-pointer hover:bg-blue-600">
-    {@render children()}
+<button
+    onclick={click}
+    {type}
+    class="{`${fill_width ? 'w-full' : ''}`} text-inherits flex min-h-13 cursor-pointer items-center justify-center gap-4 rounded-lg bg-blue-600 px-4 text-xl font-semibold text-white duration-200 not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
+>
+    {#if debounce === true}
+        <span class="aspect-square h-1/2">
+            <Loader />
+        </span>
+    {/if}
+    {#if Icon && debounce == false}
+        <span class="aspect-square h-1/2">
+            <Icon />
+        </span>
+    {/if}
+
+    <p class="font-semibold">{text}</p>
 </button>

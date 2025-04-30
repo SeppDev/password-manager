@@ -1,6 +1,13 @@
-use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
+use rocket::{
+    Request,
+    http::Status,
+    request::{FromRequest, Outcome},
+};
 
-use crate::database::{accounts::{UserSession, User}, Database};
+use crate::database::{
+    Database,
+    accounts::{User, UserSession},
+};
 use rocket::State;
 
 use super::ApiResponse;
@@ -65,9 +72,12 @@ impl<'r> FromRequest<'r> for UserSession {
         };
 
         let cookies = req.cookies();
-        let token = match cookies.get("token") {
-            Some(token) => token.value(),
-            None => return Outcome::Error((Status::Unauthorized, ())),
+        let token = match req.headers().get("token").next() {
+            Some(t) => t,
+            None => match cookies.get("token") {
+                Some(token) => token.value(),
+                None => return Outcome::Error((Status::Unauthorized, ())),
+            },
         };
 
         let session = match db.get_session(&token).await {
@@ -78,7 +88,6 @@ impl<'r> FromRequest<'r> for UserSession {
         Outcome::Success(session)
     }
 }
-
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for User {

@@ -1,9 +1,12 @@
 <script lang="ts">
     import type { Account } from "../types/account";
 
-    const { accounts, selected }: {
-      accounts: string[],
-      selected: (username: string) => void
+    const {
+        accounts,
+        selected,
+    }: {
+        accounts: string[];
+        selected: (username: string) => void;
     } = $props();
 </script>
 
@@ -16,7 +19,7 @@
         {#each accounts as account}
             <button
                 onclick={() => selected(account)}
-                class="h-10 text-base font-bold duration-200 border-none cursor-pointer bg-none dark:hover:bg-blue-400 not-dark:hover:bg-blue-800"
+                class="h-10 text-base font-bold duration-200 border-none cursor-pointer bg-none dark:hover:bg-blue-500 not-dark:hover:bg-blue-800"
                 ><p class="ml-5 text-left">{account}</p></button
             >
         {/each}

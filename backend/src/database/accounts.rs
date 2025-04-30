@@ -4,8 +4,13 @@ use chrono::{Duration, Utc};
 use rand::{Rng, distr::Alphanumeric};
 use sqlx::postgres::PgQueryResult;
 
+use argon2::{
+    Argon2,
+    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
+};
+
 use super::Database;
-use bcrypt::{DEFAULT_COST, hash};
+use super::db_config::{SESSIONS_TABLE, USERS_TABLE};
 
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
 pub struct User {
@@ -24,20 +29,21 @@ pub struct UserData {
     pub data: Vec<u8>,
 }
 
-use super::db_config::{SESSIONS_TABLE, USERS_TABLE};
-
 impl Database {
     pub async fn create_account(
         &self,
         name: &str,
         password: &str,
     ) -> super::QueryResult<PgQueryResult> {
-        let hash = hash(password.to_string(), DEFAULT_COST).unwrap();
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password = password.as_bytes();
+        let password_hash = argon2.hash_password(password, &salt).unwrap().to_string();
 
         let query = format!("INSERT INTO {USERS_TABLE} (name, password, data) VALUES($1, $2, $3)");
         sqlx::query(&query)
             .bind(name.to_string())
-            .bind(hash)
+            .bind(password_hash)
             .bind(Vec::new() as Vec<u8>)
             .execute(&self.pool)
             .await
@@ -79,7 +85,9 @@ impl Database {
         todo!()
     }
     pub async fn get_user_by_name(&self, name: &str) -> sqlx::Result<User> {
-        let query = format!("SELECT id, name, password FROM {USERS_TABLE} WHERE name = ($1);");
+        let query = format!(
+            "SELECT id, name, password FROM {USERS_TABLE} WHERE LOWER(name) = LOWER(($1));"
+        );
 
         sqlx::query_as::<_, User>(&query)
             .bind(name.to_string())
