@@ -1,27 +1,31 @@
 import config from "../config";
 import type { Account } from "./account";
 
+// TODO keep me signed in
+const storage = browser.storage.local;
+
 export async function getToken(): Promise<string | undefined> {
-  const storage = await browser.storage.local.get("token");
-  return storage.token;
+  const data = await storage.get("token");
+  return data.token;
 }
 
 export async function setToken(token: string) {
-  await browser.storage.local.set({ token });
+  await storage.set({ token });
 }
 
-export async function logout() {
-  await browser.storage.local.set({ token: undefined });
+export async function deleteToken() {
+  await storage.set({ token: undefined });
 }
 
 export async function IsAuthenticated(token?: string): Promise<boolean> {
   token = token || (await getToken());
-  if (!token) return false;
+  if (!token) {
+    deleteToken();
+    return false
+  };
 
   let response = await fetch(`${config.api}/authenticated`, {
-    headers: {
-      token,
-    },
+    headers: { token },
   });
 
   return response.status === 200;

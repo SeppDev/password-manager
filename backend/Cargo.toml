@@ -15,12 +15,9 @@ base64 = "0.22.1"
 rand = "0.9.1"
 sha2 = "0.10.8"
 argon2 = "0.5.3"
-# rand_core = "0.9.3"
+chrono = { version = "0.4.40", features = ["serde"] }
+sqlx = {version = "0.8.5", features = ["postgres", "macros", "chrono", "migrate",  "runtime-tokio", "tls-rustls-ring-webpki", "derive"]}
+crypto-common = "0.1.6"
+hmac = "0.12.1"
+jwt-simple = "0.12.12"
 
-[dependencies.chrono]
-version = "0.4.40"
-features = ["serde"]
-
-[dependencies.sqlx]
-version = "0.8.5"
-features = ["postgres", "macros", "chrono", "migrate",  "runtime-tokio", "tls-native-tls", "derive"]

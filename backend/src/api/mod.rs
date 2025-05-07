@@ -1,4 +1,4 @@
-use crate::database::{Database, accounts::User};
+use crate::database::{Database, UserClaims, accounts::User};
 use base64::{Engine, prelude::BASE64_STANDARD};
 use rocket::State;
 
@@ -42,11 +42,7 @@ pub async fn signup<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResu
         Err(err) => return ApiResponse::err_message(err.to_string()).into(),
     };
 
-    let token = match db.create_session(&user.id).await {
-        Ok(t) => t,
-        Err(_) => return ApiResponse::err_message("Failed to create session token").into(),
-    };
-
+    let token = db.create_session(user.id);
     let json = json!({"token": token});
 
     ApiResponse::Ok(json.to_string()).into()
@@ -76,7 +72,7 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
         return ApiResponse::ok_message("Wrong password").into();
     }
 
-    let token = db.create_session(&user.id).await.unwrap();
+    let token = db.create_session(user.id);
     ApiResponse::ok_key_value("token", token).into()
 }
 
@@ -96,12 +92,15 @@ pub async fn update_user_data<'r>(db: &State<Database>, user: User, input: Strin
 
 #[get("/user/exists/<username>")]
 pub async fn user_exists<'r>(db: &State<Database>, username: &str) -> ApiResponse {
-    match db.get_user_by_name(username).await {
-        Ok(_) => return ApiResponse::ok_message("true"),
-        Err(e) => println!("{e:#?}"),
+    if !username.is_ascii() {
+        return ApiResponse::ok_message("Username must only contain valid ascii characters");
     }
-    ApiResponse::ok_message("false")
+
+    match db.get_user_by_name(username).await {
+        Ok(_) => return ApiResponse::ok_key_value("value", "true"),
+        Err(e) => ApiResponse::ok_key_value("value", "false"),
+    }
 }
 
 #[get("/authenticated")]
-pub async fn authenticated<'r>(_user: User) {}
+pub async fn authenticated<'r>(_user: UserClaims) {}

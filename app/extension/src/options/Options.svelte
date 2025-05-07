@@ -12,6 +12,8 @@
     let errorMessage: string | undefined = $state(undefined);
     let username = $state("");
     let password = $state("");
+    let confirmPassword = $state("");
+
     let page: "continue" | "create account" | "login" | "done" =
         $state("continue");
 
@@ -39,8 +41,15 @@
             return;
         }
         const response = await fetch(`${config.api}/user/exists/${username}`);
+        const json = await response.json();
+        if (json.message) {
+            errorMessage = json.message;
+            return;
+        }
 
-        const exists: boolean = (await response.json()).message == "true";
+        const exists: boolean = json.value == "true";
+        password = "";
+        confirmPassword = "";
         page = exists ? "login" : "create account";
     }
 
@@ -58,6 +67,15 @@
     }
 
     async function signUpSubmit() {
+        if (password.length < 8) {
+            errorMessage = "Password is too short";
+            return;
+        }
+        if (password != confirmPassword) {
+            errorMessage = "Passwords don't match";
+            return;
+        }
+
         const response = await fetch(`${config.api}/signup`, {
             method: "POST",
             headers: {
@@ -88,7 +106,7 @@
 
 <div class="h-dvh w-dvw flex flex-col items-center justify-center p-4">
     {#if page !== "done"}
-        <form class="w-full flex flex-col gap-4 items-left">
+        <form class="w-full flex flex-col gap-4 items-center">
             <p class="text-3xl font-bold text-center">Log in to Aurapass</p>
 
             {#if errorMessage !== undefined}
@@ -101,16 +119,38 @@
             {#if page === "continue"}
                 <Input bind:value={username} title="username" />
             {:else if page === "login" || page == "create account"}
-                <p class="text-2xl font-bold">{username}</p>
+                <p class="text-2xl font-bold w-full text-left">{username}</p>
                 <Input title="password" bind:value={password} type="password" />
+                {#if page == "create account"}
+                    <Input
+                        title="confirm password"
+                        bind:value={confirmPassword}
+                        type="password"
+                    />
+                {/if}
             {/if}
-            <Button type="submit" onclick={continueButton} text={page} />
+
+            <Button
+                prevent_default
+                fill_width
+                type="submit"
+                onclick={continueButton}
+                text={page}
+            />
+            {#if page === "continue"}
+                <p class="font-sm text-neutral-600">
+                    Enter your username to log in or sign up.
+                </p>
+            {/if}
 
             {#if page !== "continue"}
                 <Button
                     onclick={() => {
+                        errorMessage = undefined;
                         page = "continue";
                     }}
+                    prevent_default
+                    fill_width
                     text="back"
                     type="button"
                 />
@@ -120,6 +160,8 @@
         <span class="flex flex-col justify-center items-center gap-6">
             <p class="text-3xl font-bold text-center">Logged in</p>
             <Button
+                prevent_default
+                fill_width
                 text="close ({closeInterval})"
                 onclick={() => {
                     window.close();

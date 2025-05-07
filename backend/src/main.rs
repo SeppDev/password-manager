@@ -7,6 +7,7 @@ use database::Database;
 mod api;
 mod cors;
 mod database;
+pub mod jwt;
 mod tests;
 
 use dotenv::dotenv;

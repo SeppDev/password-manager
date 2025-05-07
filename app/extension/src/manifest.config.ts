@@ -44,6 +44,7 @@ export default defineManifest(async () => ({
       "128": "src/assets/icons/icon-128.png",
     },
   },
+  // web_accessible_resources: ["src/tailwind.css"],
   host_permissions: ["http://localhost:8000/*"],
   permissions: ["storage"],
 }));

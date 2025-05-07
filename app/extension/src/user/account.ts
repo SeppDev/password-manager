@@ -1,7 +1,8 @@
 export interface Account {
-    Title: String,
-    Email?: String,
-    Username?: String,
-    Password?: String,
-    URLs: String[]
+    title?: String,
+    email?: String,
+    username?: String,
+    password?: String,
+    totp?: String
+    urls: String[]
 }

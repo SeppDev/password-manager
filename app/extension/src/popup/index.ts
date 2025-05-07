@@ -1,4 +1,3 @@
-import { getToken, IsAuthenticated } from "../user/userData";
 import { mount } from "svelte";
 import Popup from "./Popup.svelte";
 

@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{collections::BTreeMap, fmt::Debug};
 
 use chrono::{Duration, Utc};
 use rand::{Rng, distr::Alphanumeric};
@@ -9,19 +9,14 @@ use argon2::{
     password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 
-use super::Database;
-use super::db_config::{SESSIONS_TABLE, USERS_TABLE};
+use super::db_config::USERS_TABLE;
+use super::{Database, UserClaims};
 
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
 pub struct User {
     pub id: i64,
     pub name: String,
     pub password: String,
-}
-
-#[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
-pub struct UserSession {
-    pub user_id: i64,
 }
 
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
@@ -48,41 +43,14 @@ impl Database {
             .execute(&self.pool)
             .await
     }
-    pub async fn create_session(&self, user_id: &i64) -> sqlx::Result<String> {
-        let token: String = {
-            let mut rng = rand::rng();
-            (0..100).map(|_| rng.sample(Alphanumeric) as char).collect()
-        };
-
-        let expires_at = Utc::now() + Duration::days(1);
-        let query =
-            format!("INSERT INTO {SESSIONS_TABLE}(token, user_id, expires_at) VALUES($1, $2, $3)");
-
-        sqlx::query(&query)
-            .bind(&token)
-            .bind(user_id)
-            .bind(expires_at)
-            .execute(&self.pool)
-            .await?;
-
-        return Ok(token);
+    pub fn create_session(&self, user_id: i64) -> String {
+        self.jwt.create_session(UserClaims { user_id }).unwrap()
     }
-    pub async fn get_session(&self, token: &str) -> sqlx::Result<UserSession> {
-        let query = format!("DELETE FROM {SESSIONS_TABLE} WHERE expires_at < NOW();");
-        sqlx::query(&query)
-            .execute(&self.pool)
-            .await
-            .expect("Failed to delete previous sessions");
-
-        let query = format!("SELECT user_id FROM {SESSIONS_TABLE} WHERE token = ($1);");
-
-        sqlx::query_as::<_, UserSession>(&query)
-            .bind(token)
-            .fetch_one(&self.pool)
-            .await
-    }
-    pub async fn extend_session(&self, token: &str) -> sqlx::Result<()> {
-        todo!()
+    pub fn get_session(&self, token: &str) -> Option<UserClaims> {
+        match self.jwt.get_claims(token) {
+            Ok(c) => Some(c),
+            Err(..) => None,
+        }
     }
     pub async fn get_user_by_name(&self, name: &str) -> sqlx::Result<User> {
         let query = format!(
@@ -94,7 +62,7 @@ impl Database {
             .fetch_one(&self.pool)
             .await
     }
-    pub async fn get_user_by_id(&self, id: &i64) -> sqlx::Result<User> {
+    pub async fn get_user_by_id(&self, id: i64) -> sqlx::Result<User> {
         let query = format!("SELECT * FROM {USERS_TABLE} WHERE id = ($1);");
 
         sqlx::query_as::<_, User>(&query)

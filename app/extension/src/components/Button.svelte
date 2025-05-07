@@ -7,8 +7,10 @@
         onclick,
         text = "Button",
         type = "button",
-        fill_width = true,
-        prevent_default = true,
+        compact = false,
+        fill_width = false,
+        prevent_default = false,
+        theme = "primary",
         href,
         Icon,
     }: {
@@ -16,7 +18,9 @@
         text?: string;
         fill_width?: boolean;
         prevent_default?: boolean;
+        compact?: boolean;
         Icon?: Component;
+        theme?: "primary" | "secondary";
         type?: "submit" | "button" | "reset";
         href?: string;
     } = $props();
@@ -42,7 +46,9 @@
 <button
     onclick={click}
     {type}
-    class="{`${fill_width ? 'w-full' : ''}`} text-inherits flex min-h-13 cursor-pointer items-center justify-center gap-4 rounded-lg bg-blue-600 px-4 text-xl font-semibold text-white duration-200 not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
+    class="{fill_width ? 'w-full' : ''} {compact
+        ? 'text-sm h-8'
+        : 'text-xl h-13'} text-inherits flex max-h-full cursor-pointer items-center justify-center gap-4 px-4 rounded-lg bg-blue-600 font-semibold text-white duration-200 not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
 >
     {#if debounce === true}
         <span class="aspect-square h-1/2">

@@ -1,13 +1,5 @@
 import { mount } from "svelte";
-import Form from "./Form.svelte";
-
-async function render() {
-  const target = document.getElementById("app");
-  if (!target) return;
-  mount(Form, { target });
-}
-
-
+import InputButton from "./input/InputButton.svelte";
 
 const id = "PASSWORD_MANAGER";
 

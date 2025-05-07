@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use sqlx::{Executor, Result, postgres::PgQueryResult};
 
 pub mod db {
@@ -8,24 +9,33 @@ pub mod db {
     pub type QueryResult<T> = sqlx::Result<T, sqlx::Error>;
 }
 
-
 pub mod db_config {
     pub const USERS_TABLE: &str = "users";
-    pub const SESSIONS_TABLE: &str = "sessions";
-    pub const DATA_TABLE: &str = "data";
+    // pub const VAULTS_TABLE: &str = "vaults";
 }
 
 use db::*;
 
+use crate::jwt::JWTSession;
+
 pub mod accounts;
 pub mod init;
 
+#[derive(Serialize, Deserialize)]
+pub struct UserClaims {
+    pub user_id: i64,
+}
+
 pub struct Database {
     pub pool: DBPool,
+    pub jwt: JWTSession<UserClaims>,
 }
 impl Database {
     pub fn from(pool: DBPool) -> Self {
-        Self { pool }
+        Self {
+            pool,
+            jwt: JWTSession::new(),
+        }
     }
     pub async fn open(url: &String) -> Result<Self> {
         let pool = DBPool::connect(&url).await.unwrap();

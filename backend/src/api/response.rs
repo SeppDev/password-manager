@@ -28,9 +28,6 @@ impl ApiResponse {
     pub fn ok_key_value(key: impl ToString, value: impl ToString) -> ApiResponse {
         Self::Ok(Self::key_value(key, value))
     }
-    pub fn err_key_value(key: impl ToString, value: impl ToString) -> ApiResponse {
-        Self::Err(Self::key_value(key, value))
-    }
     pub fn ok_message(body: impl ToString) -> ApiResponse {
         Self::Ok(Self::message_string(body))
     }

@@ -4,10 +4,7 @@ use rocket::{
     request::{FromRequest, Outcome},
 };
 
-use crate::database::{
-    Database,
-    accounts::{User, UserSession},
-};
+use crate::database::{Database, UserClaims, accounts::User};
 use rocket::State;
 
 use super::ApiResponse;
@@ -47,6 +44,12 @@ impl<'r> FromRequest<'r> for SignupCreds<'r> {
             _ => return Outcome::Error((Status::BadRequest, SignupError::MissingHeaders)),
         };
 
+        if !username.is_ascii() {
+            return Outcome::Success(Self::Err(ApiResponse::ok_message(
+                "Username must only contain valid ascii characters",
+            )));
+        }
+
         if username.len() < 3 || username.len() > 20 {
             return Outcome::Success(Self::Err(ApiResponse::ok_message(
                 "Username must be between 3 and 20 characters long",
@@ -56,36 +59,6 @@ impl<'r> FromRequest<'r> for SignupCreds<'r> {
         }
 
         Outcome::Success(Self::Info { username, password })
-    }
-}
-
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for UserSession {
-    type Error = ();
-
-    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        let db = match req.guard::<&State<Database>>().await {
-            Outcome::Success(db) => db,
-            Outcome::Forward(status) | Outcome::Error((status, _)) => {
-                return Outcome::Error((status, ()));
-            }
-        };
-
-        let cookies = req.cookies();
-        let token = match req.headers().get("token").next() {
-            Some(t) => t,
-            None => match cookies.get("token") {
-                Some(token) => token.value(),
-                None => return Outcome::Error((Status::Unauthorized, ())),
-            },
-        };
-
-        let session = match db.get_session(&token).await {
-            Ok(b) => b,
-            Err(_) => return Outcome::Error((Status::BadRequest, ())),
-        };
-
-        Outcome::Success(session)
     }
 }
 
@@ -101,18 +74,44 @@ impl<'r> FromRequest<'r> for User {
             }
         };
 
-        let session = match req.guard::<UserSession>().await {
-            Outcome::Success(session) => session,
-            Outcome::Forward(status) | Outcome::Error((status, _)) => {
-                return Outcome::Error((status, ()));
-            }
+        let token = match req.headers().get("token").next() {
+            Some(t) => t,
+            None => return Outcome::Error((Status::Unauthorized, ())),
+        };
+        let session = match db.get_session(token) {
+            Some(s) => s,
+            None => return Outcome::Error((Status::Unauthorized, ())),
         };
 
-        let user = match db.get_user_by_id(&session.user_id).await {
+        let user = match db.get_user_by_id(session.user_id).await {
             Ok(u) => u,
             Err(_) => return Outcome::Error((Status::InternalServerError, ())),
         };
 
         Outcome::Success(user)
+    }
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for UserClaims {
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let db = match req.guard::<&State<Database>>().await {
+            Outcome::Success(db) => db,
+            Outcome::Forward(status) | Outcome::Error((status, _)) => {
+                return Outcome::Error((status, ()));
+            }
+        };
+        let token = match req.headers().get("token").next() {
+            Some(t) => t,
+            None => return Outcome::Error((Status::Unauthorized, ())),
+        };
+        let session = match db.get_session(token) {
+            Some(s) => s,
+            None => return Outcome::Error((Status::Unauthorized, ())),
+        };
+
+        Outcome::Success(session)
     }
 }
