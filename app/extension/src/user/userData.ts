@@ -1,7 +1,7 @@
 import config from "../config";
 import type { Account } from "./account";
 
-// TODO keep me signed in
+// Change to memory on release
 const storage = browser.storage.local;
 
 export async function getToken(): Promise<string | undefined> {
@@ -17,36 +17,37 @@ export async function deleteToken() {
   await storage.set({ token: undefined });
 }
 
-export async function IsAuthenticated(token?: string): Promise<boolean> {
-  token = token || (await getToken());
-  if (!token) {
-    deleteToken();
-    return false
-  };
-
-  let response = await fetch(`${config.api}/authenticated`, {
-    headers: { token },
-  });
-
-  return response.status === 200;
+export async function getEncryptionPassword(): Promise<string | undefined> {
+  const data = await storage.get("password");
+  return data.password;
 }
 
-export async function syncUserData(): Promise<boolean> {
-  const token = await getToken();
-  if (!token) return false;
+// export async function IsAuthenticated(token?: string): Promise<boolean> {
+//   token = token || (await getToken());
+//   if (!token) {
+//     deleteToken();
+//     return false;
+//   }
 
-  const response = await fetch(`${config.api}/userdata`, {
-    headers: {
-      token,
-    },
-  });
+//   let response = await fetch(`${config.api}/authenticated`, {
+//     headers: { token },
+//   });
 
-  const json = await response.text();
-  // console.log(json);
+//   return response.status === 200;
+// }
 
-  return true;
-}
+// export async function syncUserData(): Promise<boolean> {
+//   const token = await getToken();
+//   if (!token) return false;
 
-export async function getAccounts(): Promise<Account[]> {
-  return [];
-}
+//   const response = await fetch(`${config.api}/userdata`, {
+//     headers: {
+//       token,
+//     },
+//   });
+
+//   const text = await response.text();
+//   console.log(text);
+
+//   return true;
+// }

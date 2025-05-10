@@ -1,13 +1,6 @@
 import { mount } from "svelte";
-import Form from "./Form.svelte";
-
-async function render() {
-  const target = document.getElementById("app");
-  if (!target) return;
-  mount(Form, { target });
-}
-
-
+import InputButton from "./input/InputButton.svelte";
+import tailwindStyles from "../tailwind.css?inline";
 
 const id = "PASSWORD_MANAGER";
 
@@ -30,6 +23,9 @@ shadowHost.style.position = "absolute";
 shadowHost.style.zIndex = "100";
 
 const shadowRoot = shadowHost.attachShadow({ mode: "open" });
+const style = document.createElement("style");
+style.textContent = tailwindStyles;
+shadowRoot.appendChild(style);
 
 const offsetDiv = document.createElement("span");
 offsetDiv.style.position = "absolute";
@@ -42,7 +38,7 @@ shadowRoot.appendChild(offsetDiv);
 
 mount(InputButton, { target: offsetDiv });
 
-let activeInput: HTMLElement | null = null;
+let activeInput: HTMLElement | undefined = undefined;
 
 function updateActiveInput() {
   if (!activeInput) return;
@@ -82,12 +78,12 @@ function updateActiveInput() {
 
 const knownElements: Array<HTMLElement> = [];
 
-function handleInput(input: HTMLElement) {
+function handleInput(input: HTMLInputElement) {
   if (knownElements.includes(input)) return;
   knownElements.push(input);
 
   const inputType = input.getAttribute("type");
-  if (!activeInput) {
+  if (!activeInput && inputType == "password") {
     activeInput = input;
     updateActiveInput();
   }
@@ -98,15 +94,31 @@ function handleInput(input: HTMLElement) {
   });
 }
 
-function handleElements(elements: NodeListOf<HTMLElement>) {
+function handleElements(elements: NodeListOf<HTMLInputElement>) {
   elements.forEach((element) => handleInput(element));
 }
-
 setInterval(updateActiveInput, config.inputCheckInterval);
 
-handleElements(document.querySelectorAll("input[type='password']"));
-setInterval(() => {
+const observer = new MutationObserver((mutations) => {
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (!(node instanceof HTMLElement)) continue;
+      if (node.tagName !== "INPUT") continue;
+      handleInput(node as HTMLInputElement);
+    }
+  }
+});
+
+function queryElements() {
   handleElements(document.querySelectorAll("input[type='text']"));
   handleElements(document.querySelectorAll("input[type='email']"));
   handleElements(document.querySelectorAll("input[type='password']"));
-}, config.inputCheckInterval);
+}
+
+queryElements();
+setTimeout(queryElements, 1000);
+
+observer.observe(document.body, {
+  childList: true,
+  subtree: true,
+});

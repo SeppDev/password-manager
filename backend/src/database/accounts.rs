@@ -1,15 +1,12 @@
-use std::{collections::BTreeMap, fmt::Debug};
-
-use chrono::{Duration, Utc};
-use rand::{Rng, distr::Alphanumeric};
 use sqlx::postgres::PgQueryResult;
+use std::fmt::Debug;
 
 use argon2::{
     Argon2,
     password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
 };
 
-use super::db_config::USERS_TABLE;
+use super::config::{USERS_TABLE, VAULT_TABLE};
 use super::{Database, UserClaims};
 
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
@@ -20,8 +17,8 @@ pub struct User {
 }
 
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
-pub struct UserData {
-    pub data: Vec<u8>,
+pub struct VaultEntry {
+    pub data: Option<Vec<u8>>,
 }
 
 impl Database {
@@ -35,11 +32,20 @@ impl Database {
         let password = password.as_bytes();
         let password_hash = argon2.hash_password(password, &salt).unwrap().to_string();
 
-        let query = format!("INSERT INTO {USERS_TABLE} (name, password, data) VALUES($1, $2, $3)");
+        let query = format!(
+            "WITH new_user AS (
+                INSERT INTO {USERS_TABLE} (name, password)
+                VALUES ($1, $2)
+                RETURNING id
+            )
+            INSERT INTO {VAULT_TABLE} (user_id)
+            SELECT id FROM new_user;
+"
+        );
         sqlx::query(&query)
             .bind(name.to_string())
             .bind(password_hash)
-            .bind(Vec::new() as Vec<u8>)
+            // .bind(Vec::new() as Vec<u8>)
             .execute(&self.pool)
             .await
     }
@@ -70,16 +76,18 @@ impl Database {
             .fetch_one(&self.pool)
             .await
     }
-    pub async fn get_user_data(&self, id: &i64) -> sqlx::Result<UserData> {
-        let query = format!("SELECT data FROM {USERS_TABLE} WHERE id = ($1);");
+    pub async fn get_user_vault(&self, id: i64) -> sqlx::Result<VaultEntry> {
+        let query = format!("SELECT * FROM {VAULT_TABLE} WHERE user_id = ($1)");
 
-        sqlx::query_as::<_, UserData>(&query)
+        let entry = sqlx::query_as::<_, VaultEntry>(&query)
             .bind(id)
             .fetch_one(&self.pool)
-            .await
+            .await?;
+
+        Ok(entry)
     }
-    pub async fn set_user_data(&self, id: &i64, data: &Vec<u8>) -> sqlx::Result<()> {
-        let query = format!("UPDATE {USERS_TABLE} SET data = ($1) WHERE id = ($2);");
+    pub async fn set_user_vault(&self, id: i64, data: &Vec<u8>) -> sqlx::Result<()> {
+        let query = format!("UPDATE {VAULT_TABLE} SET data = ($1) WHERE id = ($2);");
 
         sqlx::query(&query)
             .bind(data)

@@ -9,9 +9,9 @@ pub mod db {
     pub type QueryResult<T> = sqlx::Result<T, sqlx::Error>;
 }
 
-pub mod db_config {
+pub mod config {
     pub const USERS_TABLE: &str = "users";
-    // pub const VAULTS_TABLE: &str = "vaults";
+    pub const VAULT_TABLE: &str = "vaults";
 }
 
 use db::*;

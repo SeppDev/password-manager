@@ -17,6 +17,17 @@
     let page: "continue" | "create account" | "login" | "done" =
         $state("continue");
 
+    (async () => {
+        const data = await browser.storage.local.get(["username", "password"]);
+        if (data.username) {
+            username = data.username;
+            page = "login";
+        }
+        if (data.password) {
+            password = data.password;
+        }
+    })();
+
     let closeInterval = $state(4);
     async function startCloseInterval() {
         setInterval(() => {
@@ -30,6 +41,9 @@
     async function handleResponse(response: Response) {
         errorMessage = response.message;
         if (!response.token) return;
+
+        browser.storage.local.set({ username, password });
+
         await setToken(response.token);
         page = "done";
         startCloseInterval();
@@ -68,7 +82,7 @@
 
     async function signUpSubmit() {
         if (password.length < 8) {
-            errorMessage = "Password is too short";
+            errorMessage = "Password needs to be longer than 8 characters";
             return;
         }
         if (password != confirmPassword) {
@@ -117,12 +131,18 @@
                 </div>
             {/if}
             {#if page === "continue"}
-                <Input bind:value={username} title="username" />
+                <Input fill_width bind:value={username} title="username" />
             {:else if page === "login" || page == "create account"}
                 <p class="text-2xl font-bold w-full text-left">{username}</p>
-                <Input title="password" bind:value={password} type="password" />
+                <Input
+                    fill_width
+                    title="password"
+                    bind:value={password}
+                    type="password"
+                />
                 {#if page == "create account"}
                     <Input
+                        fill_width
                         title="confirm password"
                         bind:value={confirmPassword}
                         type="password"
@@ -163,9 +183,7 @@
                 prevent_default
                 fill_width
                 text="close ({closeInterval})"
-                onclick={() => {
-                    window.close();
-                }}
+                onclick={() => window.close()}
             />
         </span>
     {/if}

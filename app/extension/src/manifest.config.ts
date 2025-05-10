@@ -24,6 +24,7 @@ export default defineManifest(async () => ({
   content_scripts: [
     {
       matches: ["<all_urls>"],
+      run_at: "document_end",
       js: ["src/content/index.ts"],
     },
     {

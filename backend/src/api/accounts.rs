@@ -76,7 +76,7 @@ impl<'r> FromRequest<'r> for User {
 
         let token = match req.headers().get("token").next() {
             Some(t) => t,
-            None => return Outcome::Error((Status::Unauthorized, ())),
+            None => return Outcome::Error((Status::BadRequest, ())),
         };
         let session = match db.get_session(token) {
             Some(s) => s,

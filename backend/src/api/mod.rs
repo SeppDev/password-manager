@@ -78,14 +78,14 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
 
 #[get("/userdata")]
 pub async fn user_data<'r>(db: &State<Database>, user: User) -> String {
-    let data = db.get_user_data(&user.id).await.unwrap().data;
-    BASE64_STANDARD.encode(data)
+    let vault = db.get_user_vault(user.id).await.unwrap();
+    BASE64_STANDARD.encode(vault.data.unwrap_or_default())
 }
 
 #[post("/userdata", data = "<input>")]
 pub async fn update_user_data<'r>(db: &State<Database>, user: User, input: String) -> ApiResponse {
     let bytes = BASE64_STANDARD.decode(input).unwrap();
-    db.set_user_data(&user.id, &bytes).await.unwrap();
+    db.set_user_vault(user.id, &bytes).await.unwrap();
 
     ApiResponse::NoContent(())
 }
@@ -98,7 +98,7 @@ pub async fn user_exists<'r>(db: &State<Database>, username: &str) -> ApiRespons
 
     match db.get_user_by_name(username).await {
         Ok(_) => return ApiResponse::ok_key_value("value", "true"),
-        Err(e) => ApiResponse::ok_key_value("value", "false"),
+        Err(_) => ApiResponse::ok_key_value("value", "false"),
     }
 }
 

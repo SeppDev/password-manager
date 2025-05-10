@@ -1,25 +1,32 @@
 <script lang="ts">
-    import { getToken, IsAuthenticated, deleteToken } from "../user/userData";
+    import { getToken, deleteToken } from "../user/userData";
     import Loader from "../components/Loader.svelte";
     import type { Account } from "../user/account";
     import Button from "../components/Button.svelte";
     import Input from "../components/Input.svelte";
+    import { fetchUserData, type Vault } from "../util/api";
+    import { syncVaults } from "../background";
 
     let page: "loading" | "home" | "error" = $state("loading");
     let { authenticate } = $props();
+    let synced = $state(false);
+    let search = $state("");
+    let displayingAccounts: Account[] = $state([]);
 
-    let search: string = $state("");
-
-    let accounts: Account[] = $state([]);
-    function createAccount() {
-        let account: Account = {
-            username: "Account",
-            urls: ["google.com"],
-        };
-        accounts.push(account);
+    let vaults: Vault[] = [];
+    async function updateVaults() {
+        syncVaults.sendMessage(vaults);
     }
-    for (let i = 0; i < 10; i++) {
-        createAccount();
+
+    function createAccount(username: string) {
+        if (!synced) return;
+
+        let account: Account = {
+            username,
+            urls: ["auth.google.com/"],
+        };
+        vaults[0].accounts.push(account);
+        updateVaults();
     }
 
     async function main() {
@@ -27,17 +34,35 @@
         if (!token) {
             authenticate();
             window.close();
+            return;
         }
 
+        let port = browser.runtime.connect();
+        port.onMessage.addListener((data) => {
+            const cachedVaults = data as Vault[] | undefined;
+            if (!cachedVaults) return;
+            vaults = cachedVaults;
+        });
         page = "home";
-        const authenticated = await IsAuthenticated();
-        if (!authenticated) {
+
+        const userData = await fetchUserData();
+        if (!userData) {
             authenticate();
             window.close();
             return;
         }
+        synced = true;
+
+        vaults = userData;
+        updateVaults();
     }
     main();
+
+    setInterval(() => {
+        let first: Vault | undefined = vaults[0];
+        if (!first) return;
+        displayingAccounts = first.accounts;
+    }, 100);
 
     async function logout() {
         deleteToken();
@@ -65,8 +90,21 @@
     {#if page === "loading"}
         <Loading />
     {:else if page === "home"}
-        <div class="w-120 h-80 flex flex-row relative">
-            {@render Accounts()}
+        <div class="w-150 bg-neutral-900 flex flex-col relative">
+            <div class="flex flex-row w-full h-100">
+                <!-- <div class="bg-green-500 h-full w-12"></div> -->
+                {@render Accounts()}
+            </div>
+            {#if synced === false}
+                <div
+                    class="w-full min-h-10 gap-x-6 flex justify-center items-center bg-black"
+                >
+                    <p>Syncing data</p>
+                    <div class="h-6 w-6">
+                        <Loader />
+                    </div>
+                </div>
+            {/if}
         </div>
     {:else}
         <div class="flex items-center justify-center">
@@ -84,31 +122,49 @@
 {/snippet}
 
 {#snippet Accounts()}
-    <div class="w-full grow-1 flex-col overflow-hidden flex">
-        <div class="w-full m-2 gap-2 flex justify-center items-center center">
-            <Input compact title="search" grow={1} value={search} />
-            <Button prevent_default compact text="Create Item" />
+    <div class="grow flex flex-col h-full">
+        <header
+            class="w-full gap-x-2 p-2 flex justify-center items-center center"
+        >
+            <Button prevent_default compact text="" />
+            <Input compact title="search" grow value={search} />
+            <Button
+                prevent_default
+                compact
+                text="create item"
+                onclick={() => createAccount("account")}
+            />
+        </header>
+        <div class="flex-row flex grow overflow-hidden">
+            <div class="flex flex-col overflow-y-auto grow-2">
+                {#each displayingAccounts || [] as account}
+                    {@render Account(account)}
+                {/each}
+            </div>
+            <div
+                class="h-full grow-3 overflow-y-auto flex flex-col items-center p-4 gap-4"
+            >
+                <Input fill_width title="email" />
+                <Input fill_width title="username" />
+                <Input fill_width type="password" title="password" />
+            </div>
         </div>
-        <div class="grow-1 overflow-y-auto">
-            {#each accounts as account}
-                {@render Account(account)}
-            {/each}
-        </div>
-        <div class="h-full min-w-40"></div>
     </div>
 {/snippet}
 
 {#snippet Account(account: Account)}
     <button
-        class="w-full h-14 bg-neutral-900 px-4 cursor-pointer hover:bg-neutral-800 duration-200"
+        class="min-h-14 bg-neutral-900 px-3 cursor-pointer gap-x-4 hover:bg-neutral-800 duration-200 flex flex-row justify-start items-center"
     >
+        <div class="bg-white rounded-full h-3/5 aspect-square"></div>
         <div class="grow-1 flex flex-col items-start">
             <p>{account.username || account.email}</p>
             {#if account.urls.length > 0}
-                <p class="text-neutral-400 font-sm">{account.urls[0]}</p>
+                <p class="text-neutral-400 font-sm text-nowrap text-sm">
+                    {account.urls[0]}
+                </p>
             {/if}
         </div>
-        <div class="grow-1"></div>
     </button>
 {/snippet}
 

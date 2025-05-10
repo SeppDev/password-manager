@@ -1,27 +1,24 @@
 <script lang="ts">
-    import type { Account } from "../types/account";
-
     const {
         accounts,
-        selected,
+        select,
     }: {
         accounts: string[];
-        selected: (username: string) => void;
+        select: (index: number) => void;
     } = $props();
 </script>
 
-<div class="w-full gap-2 mt-0 mb-3">
-    <p class="pt-2 pb-1 pl-3 m-0 text-sm font-semibold text-left">
-        Saved accounts
-    </p>
+<div class="w-full gap-2 mt-0 mb-3 text-left">
+    <p class="pt-2 text-neutral-500 pb-1 pl-3 m-0">Saved accounts</p>
 
     <div class="flex flex-col gap-0">
-        {#each accounts as account}
+        {#each accounts as account, i}
             <button
-                onclick={() => selected(account)}
-                class="h-10 text-base font-bold duration-200 border-none cursor-pointer bg-none dark:hover:bg-blue-500 not-dark:hover:bg-blue-800"
-                ><p class="ml-5 text-left">{account}</p></button
+                onclick={() => select(i)}
+                class="text-left px-4 py-1 bg-inherit cursor-pointer hover:bg-neutral-800"
             >
+                <p class="text-lg">{account}</p>
+            </button>
         {/each}
     </div>
 </div>
