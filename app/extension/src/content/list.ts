@@ -1,6 +1,8 @@
 import { mount } from "svelte";
 import InputButton from "./input/InputButton.svelte";
 import tailwindStyles from "../tailwind.css?inline";
+import { writable } from "svelte/store";
+import { savePrompt } from "../background";
 
 const id = "PASSWORD_MANAGER";
 
@@ -11,6 +13,8 @@ const config = {
   inputCheckInterval: 500,
   inputQueryInterval: 1000,
 };
+
+const inputs: { [key: string]: string } = {};
 
 const found = document.getElementById(id);
 if (found) {
@@ -29,10 +33,9 @@ shadowRoot.appendChild(style);
 
 const offsetDiv = document.createElement("span");
 offsetDiv.style.position = "absolute";
+offsetDiv.style.width = "0";
+offsetDiv.style.height = "0";
 offsetDiv.style.zIndex = "1000";
-offsetDiv.style.width = "100%";
-offsetDiv.style.height = "100%";
-offsetDiv.style.zIndex = "10000";
 
 shadowRoot.appendChild(offsetDiv);
 
@@ -88,6 +91,10 @@ function handleInput(input: HTMLInputElement) {
     updateActiveInput();
   }
 
+  if (!inputs[input.type]) {
+    inputs[input.type] = input.value;
+  }
+
   input.addEventListener("mouseenter", () => {
     activeInput = input;
     updateActiveInput();
@@ -121,4 +128,15 @@ setTimeout(queryElements, 1000);
 observer.observe(document.body, {
   childList: true,
   subtree: true,
+});
+
+function submit() {
+  savePrompt.sendMessage(inputs);
+}
+
+document.addEventListener("submit", submit);
+document.addEventListener("input", (event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.tagName !== "INPUT") return;
+  inputs[target.type] = target.value;
 });

@@ -23,8 +23,18 @@ async fn rocket() -> _ {
         Err(_) => 8000,
     };
 
-    let db = Database::open(&database_url).await.unwrap();
-    db.init_connection().await;
+    let db = loop {
+        let db = match Database::open(&database_url).await {
+            Ok(db) => db,
+            Err(err) => {
+                println!("Failed to open database: {err:?}");
+                continue;
+            }
+        };
+        db.init_connection().await;
+        
+        break db;
+    };
 
     let mut config = Config::default();
     config.port = port;

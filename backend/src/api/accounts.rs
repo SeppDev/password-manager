@@ -115,3 +115,17 @@ impl<'r> FromRequest<'r> for UserClaims {
         Outcome::Success(session)
     }
 }
+
+pub struct UserData(pub String);
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for UserData {
+    type Error = ();
+
+    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        match req.headers().get("data").next() {
+            Some(t) => Outcome::Success(UserData(t.to_string())),
+            None => Outcome::Error((Status::InternalServerError, ())),
+        }
+    }
+}

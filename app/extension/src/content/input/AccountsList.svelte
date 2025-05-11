@@ -15,7 +15,7 @@
         {#each accounts as account, i}
             <button
                 onclick={() => select(i)}
-                class="text-left px-4 py-1 bg-inherit cursor-pointer hover:bg-neutral-800"
+                class="text-left px-4 py-1 bg-inherit cursor-pointer hover:bg-neutral-800 duration-200"
             >
                 <p class="text-lg">{account}</p>
             </button>

@@ -38,7 +38,7 @@ impl Database {
         }
     }
     pub async fn open(url: &String) -> Result<Self> {
-        let pool = DBPool::connect(&url).await.unwrap();
+        let pool = DBPool::connect(&url).await?;
         Ok(Self::from(pool))
     }
     pub async fn execute(&self, query: impl ToString) -> db::QueryResult<PgQueryResult> {

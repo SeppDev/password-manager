@@ -25,7 +25,12 @@ export default defineManifest(async () => ({
     {
       matches: ["<all_urls>"],
       run_at: "document_end",
-      js: ["src/content/index.ts"],
+      js: ["src/content/list.ts"],
+    },
+    {
+      matches: ["<all_urls>"],
+      run_at: "document_end",
+      js: ["src/content/save.ts"],
     },
     {
       matches: [`${config.register_page}`],

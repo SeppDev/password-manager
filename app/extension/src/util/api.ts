@@ -1,11 +1,11 @@
 import config from "../config";
 import type { Account } from "../user/account";
-import { getEncryptionPassword, getToken } from "../user/userData";
-import { decrypt, encrypt } from "./encryption";
+import { generateId, getEncryptionPassword, getToken } from "../user/userData";
+import { decrypt, encrypt } from "./crypto";
 
 export type Vault = {
-  label?: String;
-  accounts: Account[];
+  label?: string;
+  accounts: { [key: string]: Account };
 };
 
 export async function fetchUserData(): Promise<Vault[] | undefined> {
@@ -21,10 +21,16 @@ export async function fetchUserData(): Promise<Vault[] | undefined> {
     },
   });
   let text = await response.text();
+  let encryptedData = atob(text);
+  let decrypted = await decrypt(password, encryptedData).catch(() => "{}");
+  let json = JSON.parse(decrypted || "{}") as Vault;
+  if (json.accounts === undefined) json.accounts = {};
 
-  let decrypted = await decrypt(password, text).catch(() => "{}");
-  let json = JSON.parse(decrypted) as Vault;
-  if (json.accounts === undefined) json.accounts = [];
+  // json.accounts = json.accounts.map((account) => {
+  //   if (account.id) return account;
+  //   account.id = generateId();
+  //   return account
+  // });
 
   return [json];
 }
@@ -38,7 +44,8 @@ export async function updateUserData(vaults: Vault[]) {
 
   let vault = vaults[0];
   let text = JSON.stringify(vault);
-  let data = await encrypt(password, text);
+  let encrypted = await encrypt(password, text);
+  let data = btoa(encrypted);
 
   const response = await fetch(`${config.api}/userdata`, {
     method: "post",

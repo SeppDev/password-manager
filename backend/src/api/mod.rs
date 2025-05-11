@@ -8,7 +8,7 @@ use argon2::{
 };
 
 mod accounts;
-use accounts::SignupCreds;
+use accounts::{SignupCreds, UserData};
 use serde_json::json;
 
 mod response;
@@ -82,9 +82,13 @@ pub async fn user_data<'r>(db: &State<Database>, user: User) -> String {
     BASE64_STANDARD.encode(vault.data.unwrap_or_default())
 }
 
-#[post("/userdata", data = "<input>")]
-pub async fn update_user_data<'r>(db: &State<Database>, user: User, input: String) -> ApiResponse {
-    let bytes = BASE64_STANDARD.decode(input).unwrap();
+#[post("/userdata")]
+pub async fn update_user_data<'r>(
+    db: &State<Database>,
+    user: User,
+    input: UserData,
+) -> ApiResponse {
+    let bytes = BASE64_STANDARD.decode(input.0).unwrap();
     db.set_user_vault(user.id, &bytes).await.unwrap();
 
     ApiResponse::NoContent(())
@@ -98,7 +102,12 @@ pub async fn user_exists<'r>(db: &State<Database>, username: &str) -> ApiRespons
 
     match db.get_user_by_name(username).await {
         Ok(_) => return ApiResponse::ok_key_value("value", "true"),
-        Err(_) => ApiResponse::ok_key_value("value", "false"),
+        Err(err) => {
+            return match err {
+                sqlx::Error::RowNotFound => ApiResponse::ok_key_value("value", "false"),
+                _ => ApiResponse::Err(format!("{err}")),
+            };
+        }
     }
 }
 

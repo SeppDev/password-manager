@@ -1,67 +1,94 @@
 <script lang="ts">
-    import { getToken, deleteToken } from "../user/userData";
+    import {
+        getToken,
+        deleteToken,
+        IsAuthenticated,
+        generateId,
+    } from "../user/userData";
     import Loader from "../components/Loader.svelte";
     import type { Account } from "../user/account";
     import Button from "../components/Button.svelte";
     import Input from "../components/Input.svelte";
     import { fetchUserData, type Vault } from "../util/api";
     import { syncVaults } from "../background";
+    import { writable, type Writable } from "svelte/store";
+    import { randomString } from "../util/crypto";
 
     let page: "loading" | "home" | "error" = $state("loading");
     let { authenticate } = $props();
     let synced = $state(false);
     let search = $state("");
-    let displayingAccounts: Account[] = $state([]);
 
-    let vaults: Vault[] = [];
+    let displayingAccounts: Writable<Account[]> = writable([]);
+    let selectedAccount: Account | undefined = $state(undefined);
+
+    let vaults: Writable<Vault[]> = writable([]);
     async function updateVaults() {
-        syncVaults.sendMessage(vaults);
+        syncVaults.sendMessage($vaults);
     }
 
     function createAccount(username: string) {
         if (!synced) return;
+        const vault = $vaults[0];
+        if (!vault) return;
 
         let account: Account = {
+            email: `${username}@email.com`,
             username,
+            password: "password123",
             urls: ["auth.google.com/"],
         };
-        vaults[0].accounts.push(account);
+        let id;
+        while (!id) {
+            let generated = generateId();
+            if (vault.accounts[generated]) continue;
+            id = generated;
+        }
+
+        vault.accounts[id] = account;
         updateVaults();
     }
 
+    let port = browser.runtime.connect();
+    port.onMessage.addListener((data) => {
+        const cachedVaults = data as Vault[];
+        vaults.set(cachedVaults);
+        page = "home";
+    });
+
     async function main() {
         const token = await getToken();
-        if (!token) {
+        if (!token || !(await IsAuthenticated())) {
             authenticate();
             window.close();
             return;
         }
 
-        let port = browser.runtime.connect();
-        port.onMessage.addListener((data) => {
-            const cachedVaults = data as Vault[] | undefined;
-            if (!cachedVaults) return;
-            vaults = cachedVaults;
-        });
-        page = "home";
+        // const userData = await fetchUserData();
+        // if (!userData) {
+        //     authenticate();
+        //     window.close();
+        //     return;
+        // }
+        setTimeout(() => {
+            synced = true;
+        }, 200);
 
-        const userData = await fetchUserData();
-        if (!userData) {
-            authenticate();
-            window.close();
-            return;
-        }
-        synced = true;
-
-        vaults = userData;
-        updateVaults();
+        // vaults = userData;
+        // updateVaults();
     }
     main();
 
     setInterval(() => {
-        let first: Vault | undefined = vaults[0];
+        let first: Vault | undefined = $vaults[0];
         if (!first) return;
-        displayingAccounts = first.accounts;
+        console.log(first.accounts);
+        displayingAccounts.set(
+            Object.entries(first.accounts).map(([id, account]) => {
+                account.id = id;
+                return account;
+            }),
+        );
     }, 100);
 
     async function logout() {
@@ -90,7 +117,7 @@
     {#if page === "loading"}
         <Loading />
     {:else if page === "home"}
-        <div class="w-150 bg-neutral-900 flex flex-col relative">
+        <div class="w-160 bg-neutral-900 flex flex-col relative">
             <div class="flex flex-row w-full h-100">
                 <!-- <div class="bg-green-500 h-full w-12"></div> -->
                 {@render Accounts()}
@@ -124,7 +151,7 @@
 {#snippet Accounts()}
     <div class="grow flex flex-col h-full">
         <header
-            class="w-full gap-x-2 p-2 flex justify-center items-center center"
+            class="gap-x-2 p-2 flex justify-center items-center center w-full"
         >
             <Button prevent_default compact text="" />
             <Input compact title="search" grow value={search} />
@@ -135,31 +162,89 @@
                 onclick={() => createAccount("account")}
             />
         </header>
-        <div class="flex-row flex grow overflow-hidden">
-            <div class="flex flex-col overflow-y-auto grow-2">
-                {#each displayingAccounts || [] as account}
+        <div class="grow flex-row flex overflow-hidden max-w-full">
+            <div class="flex flex-col overflow-y-auto h-full grow">
+                {#each $displayingAccounts as account}
                     {@render Account(account)}
                 {/each}
             </div>
-            <div
-                class="h-full grow-3 overflow-y-auto flex flex-col items-center p-4 gap-4"
-            >
-                <Input fill_width title="email" />
-                <Input fill_width title="username" />
-                <Input fill_width type="password" title="password" />
-            </div>
+            {#if selectedAccount}
+                <div
+                    class="h-full w-2/3 overflow-y-auto overflow-x-hidden flex flex-col justify-start items-start gap-4 p-4"
+                >
+                    {@render AccountDetail("email", selectedAccount?.email)}
+                    {@render AccountDetail(
+                        "username",
+                        selectedAccount?.username,
+                    )}
+                    {@render AccountDetail(
+                        "password",
+                        selectedAccount?.password,
+                        true,
+                    )}
+                    <div
+                        class="py-2 px-3 outline-1 outline-neutral-500 w-full flex-col rounded-xl"
+                    >
+                        <p class="text-neutral-500 text-sm">urls</p>
+                        {#each selectedAccount.urls || [] as url}
+                            <p>{url}</p>
+                        {/each}
+                    </div>
+                    <div
+                        class="py-2 px-3 outline-neutral-500 w-full overflow-y-auto flex-col flex items-start justify-start"
+                    >
+                        <p class="text-neutral-500 text-sm">details</p>
+                        <p
+                            class="text-sm text-neutral-600 max-w-full text-ellipsis whitespace-nowrap"
+                        >
+                            ID: {selectedAccount.id}
+                        </p>
+                    </div>
+                </div>
+            {/if}
         </div>
     </div>
 {/snippet}
 
+{#snippet AccountDetail(
+    title: string,
+    value: string | undefined,
+    dotted?: boolean,
+)}
+    {#if value !== undefined}
+        <button
+            onclick={() => {
+                navigator.clipboard.writeText(value);
+            }}
+            class="outline-1 outline-neutral-500 w-full flex-col flex justify-center items-start rounded-xl py-2 px-3 duration-300 cursor-pointer hover:bg-neutral-800"
+        >
+            <p class="text-neutral-500 text-sm">{title}</p>
+            {#if dotted}
+                <div
+                    class="size-full flex flex-row justify-start items-center space-x-1 py-2"
+                >
+                    {#each { length: 10 } as _}
+                        <span class="bg-white size-2 rounded-full"> </span>
+                    {/each}
+                </div>
+            {:else}
+                <p>{value}</p>
+            {/if}
+        </button>
+    {/if}
+{/snippet}
+
 {#snippet Account(account: Account)}
     <button
+        onclick={() => {
+            selectedAccount = account;
+        }}
         class="min-h-14 bg-neutral-900 px-3 cursor-pointer gap-x-4 hover:bg-neutral-800 duration-200 flex flex-row justify-start items-center"
     >
         <div class="bg-white rounded-full h-3/5 aspect-square"></div>
         <div class="grow-1 flex flex-col items-start">
             <p>{account.username || account.email}</p>
-            {#if account.urls.length > 0}
+            {#if account.urls && account.urls.length > 0}
                 <p class="text-neutral-400 font-sm text-nowrap text-sm">
                     {account.urls[0]}
                 </p>

@@ -87,7 +87,7 @@ impl Database {
         Ok(entry)
     }
     pub async fn set_user_vault(&self, id: i64, data: &Vec<u8>) -> sqlx::Result<()> {
-        let query = format!("UPDATE {VAULT_TABLE} SET data = ($1) WHERE id = ($2);");
+        let query = format!("UPDATE {VAULT_TABLE} SET data = ($1) WHERE user_id = ($2);");
 
         sqlx::query(&query)
             .bind(data)

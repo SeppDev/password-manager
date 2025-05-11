@@ -2,6 +2,16 @@
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
+export function randomBytes(length: number): number[] {
+  let array: number[] = [];
+  array.push(...crypto.getRandomValues(new Uint8Array(length)));
+  return array;
+}
+export function randomString(length: number): string {
+  let buffer = String.fromCharCode(...randomBytes(length));
+  return btoa(buffer);
+}
+
 async function getKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
   const keyMaterial = await crypto.subtle.importKey(
     "raw",

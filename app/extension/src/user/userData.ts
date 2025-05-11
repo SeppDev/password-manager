@@ -1,8 +1,13 @@
 import config from "../config";
+import { randomString } from "../util/crypto";
 import type { Account } from "./account";
 
 // Change to memory on release
 const storage = browser.storage.local;
+
+export function generateId(): string {
+  return randomString(10);
+}
 
 export async function getToken(): Promise<string | undefined> {
   const data = await storage.get("token");
@@ -22,19 +27,25 @@ export async function getEncryptionPassword(): Promise<string | undefined> {
   return data.password;
 }
 
-// export async function IsAuthenticated(token?: string): Promise<boolean> {
-//   token = token || (await getToken());
-//   if (!token) {
-//     deleteToken();
-//     return false;
-//   }
+export async function IsAuthenticated(token?: string): Promise<boolean> {
+  token = token || (await getToken());
+  if (!token) {
+    deleteToken();
+    return false;
+  }
 
-//   let response = await fetch(`${config.api}/authenticated`, {
-//     headers: { token },
-//   });
+  let response;
+  while (true) {
+    try {
+      response = await fetch(`${config.api}/authenticated`, {
+        headers: { token },
+      });
+      break;
+    } catch {}
+  }
 
-//   return response.status === 200;
-// }
+  return response.status === 200;
+}
 
 // export async function syncUserData(): Promise<boolean> {
 //   const token = await getToken();
