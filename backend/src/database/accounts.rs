@@ -17,7 +17,7 @@ pub struct User {
 }
 
 #[derive(Debug, sqlx::FromRow, serde::Deserialize, serde::Serialize, Eq, PartialEq)]
-pub struct VaultEntry {
+pub struct UserData {
     pub data: Option<Vec<u8>>,
 }
 
@@ -76,17 +76,17 @@ impl Database {
             .fetch_one(&self.pool)
             .await
     }
-    pub async fn get_user_vault(&self, id: i64) -> sqlx::Result<VaultEntry> {
+    pub async fn get_user_data(&self, id: i64) -> sqlx::Result<UserData> {
         let query = format!("SELECT * FROM {VAULT_TABLE} WHERE user_id = ($1)");
 
-        let entry = sqlx::query_as::<_, VaultEntry>(&query)
+        let data = sqlx::query_as::<_, UserData>(&query)
             .bind(id)
             .fetch_one(&self.pool)
             .await?;
 
-        Ok(entry)
+        Ok(data)
     }
-    pub async fn set_user_vault(&self, id: i64, data: &Vec<u8>) -> sqlx::Result<()> {
+    pub async fn set_user_data(&self, id: i64, data: &Vec<u8>) -> sqlx::Result<()> {
         let query = format!("UPDATE {VAULT_TABLE} SET data = ($1) WHERE user_id = ($2);");
 
         sqlx::query(&query)

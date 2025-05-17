@@ -78,7 +78,7 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
 
 #[get("/userdata")]
 pub async fn user_data<'r>(db: &State<Database>, user: User) -> String {
-    let vault = db.get_user_vault(user.id).await.unwrap();
+    let vault = db.get_user_data(user.id).await.unwrap();
     BASE64_STANDARD.encode(vault.data.unwrap_or_default())
 }
 
@@ -89,7 +89,7 @@ pub async fn update_user_data<'r>(
     input: UserData,
 ) -> ApiResponse {
     let bytes = BASE64_STANDARD.decode(input.0).unwrap();
-    db.set_user_vault(user.id, &bytes).await.unwrap();
+    db.set_user_data(user.id, &bytes).await.unwrap();
 
     ApiResponse::NoContent(())
 }

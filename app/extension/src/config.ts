@@ -7,5 +7,5 @@ export default {
   domain: DOMAIN,
   base: URI,
   // api: `${URI}/api`
-  api: `http://localhost:8000/api`,
+  api: `http://localhost:8001/api`,
 } as const;

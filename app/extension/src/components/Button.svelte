@@ -5,7 +5,7 @@
 
     const {
         onclick,
-        text = "Button",
+        text,
         type = "button",
         compact = false,
         fill_width = false,
@@ -51,15 +51,17 @@
         : 'text-xl h-13'} text-inherits flex max-h-full cursor-pointer items-center justify-center gap-4 px-4 rounded-lg bg-blue-600 font-semibold text-white duration-200 not-dark:hover:bg-blue-800 dark:text-black dark:hover:bg-blue-500"
 >
     {#if debounce === true}
-        <span class="aspect-square h-1/2">
+        <span class="aspect-square h-1/2 flex justify-center items-center">
             <Loader />
         </span>
     {/if}
     {#if Icon && debounce == false}
-        <span class="aspect-square h-1/2">
+        <span class="aspect-square h-1/2 flex justify-center items-center">
             <Icon />
         </span>
     {/if}
 
-    <p class="font-semibold">{text}</p>
+    {#if text}
+        <p class="font-semibold">{text}</p>
+    {/if}
 </button>

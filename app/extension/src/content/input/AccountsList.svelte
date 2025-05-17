@@ -1,10 +1,12 @@
 <script lang="ts">
+    import type { Account } from "../../user/account";
+
     const {
         accounts,
         select,
     }: {
-        accounts: string[];
-        select: (index: number) => void;
+        accounts: Account[];
+        select: (account: Account) => void;
     } = $props();
 </script>
 
@@ -12,12 +14,12 @@
     <p class="pt-2 text-neutral-500 pb-1 pl-3 m-0">Saved accounts</p>
 
     <div class="flex flex-col gap-0">
-        {#each accounts as account, i}
+        {#each accounts as account}
             <button
-                onclick={() => select(i)}
+                onclick={() => select(account)}
                 class="text-left px-4 py-1 bg-inherit cursor-pointer hover:bg-neutral-800 duration-200"
             >
-                <p class="text-lg">{account}</p>
+                <p class="text-lg">{account.username}</p>
             </button>
         {/each}
     </div>

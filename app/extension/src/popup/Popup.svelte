@@ -9,52 +9,41 @@
     import type { Account } from "../user/account";
     import Button from "../components/Button.svelte";
     import Input from "../components/Input.svelte";
-    import { fetchUserData, type Vault } from "../util/api";
-    import { syncVaults } from "../background";
     import { writable, type Writable } from "svelte/store";
-    import { randomString } from "../util/crypto";
+    import AccountEditor from "./AccountEditor.svelte";
+
+    import { Pencil, Trash2 } from "@lucide/svelte";
+
+    import type { Vault } from "../background/vaultManager";
+    import type { Component, Snippet } from "svelte";
+    import {
+        createAccount,
+        deleteAccount,
+        syncPopup,
+        trashAccount,
+    } from "../util/channels";
+    import { sleep } from "../util/sleep";
 
     let page: "loading" | "home" | "error" = $state("loading");
     let { authenticate } = $props();
-    let synced = $state(false);
     let search = $state("");
 
     let displayingAccounts: Writable<Account[]> = writable([]);
     let selectedAccount: Account | undefined = $state(undefined);
+    let synced = $state(false);
 
-    let vaults: Writable<Vault[]> = writable([]);
-    async function updateVaults() {
-        syncVaults.sendMessage($vaults);
-    }
+    const vaults: Writable<Vault[]> = writable([]);
+    browser.runtime.connect();
 
-    function createAccount(username: string) {
-        if (!synced) return;
-        const vault = $vaults[0];
-        if (!vault) return;
-
-        let account: Account = {
-            email: `${username}@email.com`,
-            username,
-            password: "password123",
-            urls: ["auth.google.com/"],
-        };
-        let id;
-        while (!id) {
-            let generated = generateId();
-            if (vault.accounts[generated]) continue;
-            id = generated;
-        }
-
-        vault.accounts[id] = account;
-        updateVaults();
-    }
-
-    let port = browser.runtime.connect();
-    port.onMessage.addListener((data) => {
-        const cachedVaults = data as Vault[];
-        vaults.set(cachedVaults);
+    syncPopup.onMessage((v) => {
+        vaults.set(v);
         page = "home";
+        synced = true;
     });
+
+    async function untilSynced() {
+        while (!synced) await sleep(10);
+    }
 
     async function main() {
         const token = await getToken();
@@ -70,31 +59,46 @@
         //     window.close();
         //     return;
         // }
-        setTimeout(() => {
-            synced = true;
-        }, 200);
 
         // vaults = userData;
         // updateVaults();
     }
     main();
 
-    setInterval(() => {
-        let first: Vault | undefined = $vaults[0];
-        if (!first) return;
-        console.log(first.accounts);
-        displayingAccounts.set(
-            Object.entries(first.accounts).map(([id, account]) => {
-                account.id = id;
-                return account;
-            }),
-        );
-    }, 100);
-
     async function logout() {
         deleteToken();
         authenticate();
         window.close();
+    }
+
+    let activeOverlays: Snippet[] = $state([]);
+    function closeOverlay() {
+        activeOverlays.pop();
+    }
+
+    function createItem() {
+        activeOverlays.push(CreateAccount);
+    }
+    async function onAccountCreate(
+        title: string | undefined,
+        email: string | undefined,
+        username: string | undefined,
+        password: string | undefined,
+        urls: string[],
+    ) {
+        let vault = $vaults[0].id;
+        const info = $state.snapshot({
+            vault,
+            title,
+            email,
+            username,
+            password,
+            urls,
+        });
+        synced = false;
+        createAccount.sendMessage(info);
+        await untilSynced();
+        closeOverlay();
     }
 
     // let activeAccount: Account | undefined = $state(undefined);
@@ -113,25 +117,26 @@
     // <Button text="logout" onclick={logout} />
 </script>
 
+{#snippet CreateAccount()}
+    <AccountEditor
+        mode="create"
+        onsave={onAccountCreate}
+        onclose={closeOverlay}
+    />
+{/snippet}
+
 <div class="overflow-hidden min-h-20 min-w-20">
     {#if page === "loading"}
         <Loading />
     {:else if page === "home"}
         <div class="w-160 bg-neutral-900 flex flex-col relative">
-            <div class="flex flex-row w-full h-100">
+            <div class="flex flex-row w-full h-130">
+                {#each activeOverlays as overlay}
+                    {@render overlay()}
+                {/each}
                 <!-- <div class="bg-green-500 h-full w-12"></div> -->
                 {@render Accounts()}
             </div>
-            {#if synced === false}
-                <div
-                    class="w-full min-h-10 gap-x-6 flex justify-center items-center bg-black"
-                >
-                    <p>Syncing data</p>
-                    <div class="h-6 w-6">
-                        <Loader />
-                    </div>
-                </div>
-            {/if}
         </div>
     {:else}
         <div class="flex items-center justify-center">
@@ -154,24 +159,55 @@
             class="gap-x-2 p-2 flex justify-center items-center center w-full"
         >
             <Button prevent_default compact text="" />
-            <Input compact title="search" grow value={search} />
+            <Input compact placeholder="search" grow value={search} />
             <Button
                 prevent_default
                 compact
                 text="create item"
-                onclick={() => createAccount("account")}
+                onclick={() => createItem()}
             />
         </header>
         <div class="grow flex-row flex overflow-hidden max-w-full">
-            <div class="flex flex-col overflow-y-auto h-full grow">
-                {#each $displayingAccounts as account}
-                    {@render Account(account)}
+            <div
+                class="flex flex-col overflow-y-auto overlow-x-hidden h-full grow"
+            >
+                {#each $vaults as vault}
+                    {#each Object.values(vault.accounts) as account}
+                        {@render Account(account)}
+                    {/each}
                 {/each}
             </div>
             {#if selectedAccount}
+                <span class="w-0 border-[1px] border-neutral-600 h-full"></span>
                 <div
-                    class="h-full w-2/3 overflow-y-auto overflow-x-hidden flex flex-col justify-start items-start gap-4 p-4"
+                    class="h-full w-2/3 overflow-y-auto overflow-x-hidden flex flex-col justify-start items-start gap-4 px-4"
                 >
+                    <div class="flex justify-end w-full h-8 gap-2">
+                        <Button
+                            onclick={() => {
+                                const id = selectedAccount?.id;
+                                if (!id) return;
+                            }}
+                            Icon={Pencil}
+                            theme="secondary"
+                            compact
+                            text="edit"
+                        />
+                        <Button
+                            onclick={() => {
+                                const id = selectedAccount?.id;
+                                if (!id) return;
+                                selectedAccount = undefined;
+                                trashAccount.sendMessage({
+                                    account: id,
+                                });
+                            }}
+                            Icon={Trash2}
+                            theme="secondary"
+                            text="trash"
+                            compact
+                        />
+                    </div>
                     {@render AccountDetail("email", selectedAccount?.email)}
                     {@render AccountDetail(
                         "username",
@@ -189,16 +225,6 @@
                         {#each selectedAccount.urls || [] as url}
                             <p>{url}</p>
                         {/each}
-                    </div>
-                    <div
-                        class="py-2 px-3 outline-neutral-500 w-full overflow-y-auto flex-col flex items-start justify-start"
-                    >
-                        <p class="text-neutral-500 text-sm">details</p>
-                        <p
-                            class="text-sm text-neutral-600 max-w-full text-ellipsis whitespace-nowrap"
-                        >
-                            ID: {selectedAccount.id}
-                        </p>
                     </div>
                 </div>
             {/if}

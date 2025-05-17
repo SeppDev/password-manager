@@ -6,7 +6,7 @@ import type { Account } from "./account";
 const storage = browser.storage.local;
 
 export function generateId(): string {
-  return randomString(10);
+  return randomString(12);
 }
 
 export async function getToken(): Promise<string | undefined> {

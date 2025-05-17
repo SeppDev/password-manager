@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.0.14",
     "@tsconfig/svelte": "5.0.4",
     "@types/firefox-webext-browser": "^120.0.4",
+    "@lucide/svelte": "^0.510.0",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
     "svelte": "5.28.1",

@@ -1,6 +1,7 @@
 <script lang="ts">
     let {
-        title = "title",
+        id,
+        placeholder = "input",
         type = "text",
         value = $bindable(),
         compact = false,
@@ -8,8 +9,9 @@
         grow = false,
         onInput,
     }: {
-        title?: string;
-        type?: "text" | "password";
+        id?: string;
+        placeholder?: string;
+        type?: "text" | "password" | "email" | "url";
         value?: string;
         compact?: boolean;
         fill_width?: boolean;
@@ -20,9 +22,9 @@
 
 <input
     oninput={onInput}
-    placeholder={title}
+    {placeholder}
     bind:value
-    id={title}
+    {id}
     {type}
     class="{fill_width ? 'w-full' : ''} {compact
         ? 'text-sm h-8 indent-3'

@@ -2,7 +2,7 @@ import { mount } from "svelte";
 import InputButton from "./input/InputButton.svelte";
 import tailwindStyles from "../tailwind.css?inline";
 import { writable } from "svelte/store";
-import { savePrompt } from "../background";
+import { newSavePrompt } from "../util/channels";
 
 const id = "PASSWORD_MANAGER";
 
@@ -26,7 +26,10 @@ shadowHost.id = id;
 shadowHost.style.position = "absolute";
 shadowHost.style.zIndex = "100";
 
-const shadowRoot = shadowHost.attachShadow({ mode: "open" });
+const shadowRoot = shadowHost.attachShadow({
+  mode: "closed",
+  serializable: false,
+});
 const style = document.createElement("style");
 style.textContent = tailwindStyles;
 shadowRoot.appendChild(style);
@@ -131,7 +134,10 @@ observer.observe(document.body, {
 });
 
 function submit() {
-  savePrompt.sendMessage(inputs);
+  newSavePrompt.sendMessage({
+    url: document.URL,
+    inputs,
+  });
 }
 
 document.addEventListener("submit", submit);

@@ -32,7 +32,7 @@ async fn rocket() -> _ {
             }
         };
         db.init_connection().await;
-        
+
         break db;
     };
 

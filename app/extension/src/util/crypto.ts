@@ -1,3 +1,5 @@
+import { assert } from "./assert";
+
 // Helper: convert between string and ArrayBuffer
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -10,6 +12,20 @@ export function randomBytes(length: number): number[] {
 export function randomString(length: number): string {
   let buffer = String.fromCharCode(...randomBytes(length));
   return btoa(buffer);
+}
+
+const characters =
+  "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890-=!@#$%^&*()_+[]{};':,<.>/?";
+
+export function randomPassword(length: number = 32): string {
+  let string = "";
+  for (let i = 0; i < length; i++) {
+    let index = Math.floor(Math.random() * characters.length);
+    let char = characters[index];
+    assert(char !== undefined, `character is undefined ${index}`);
+    string += char;
+  }
+  return string;
 }
 
 async function getKey(password: string, salt: Uint8Array): Promise<CryptoKey> {

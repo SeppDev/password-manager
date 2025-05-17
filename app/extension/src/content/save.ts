@@ -6,7 +6,7 @@ const id = "PASSWORD_MANAGER_SAVE";
 
 const config = {
   padding: 20,
-  updateLocationInterval: 50,
+  updateLocationInterval: 100,
 };
 
 const found = document.getElementById(id);
@@ -26,7 +26,7 @@ shadowRoot.appendChild(style);
 
 const offsetDiv = document.createElement("span");
 offsetDiv.style.position = "absolute";
-offsetDiv.style.zIndex = "10000";
+offsetDiv.style.zIndex = "100000";
 
 shadowRoot.appendChild(offsetDiv);
 

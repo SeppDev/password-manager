@@ -3,6 +3,7 @@
     import Input from "../components/Input.svelte";
     import config from "../config";
     import { setToken } from "../user/userData";
+    import { initVault } from "../util/channels";
 
     type Response = {
         message?: string;
@@ -47,6 +48,7 @@
         await setToken(response.token);
         page = "done";
         startCloseInterval();
+        initVault.sendMessage();
     }
 
     async function usernameSubmit() {
@@ -131,19 +133,23 @@
                 </div>
             {/if}
             {#if page === "continue"}
-                <Input fill_width bind:value={username} title="username" />
+                <Input
+                    fill_width
+                    bind:value={username}
+                    placeholder="username"
+                />
             {:else if page === "login" || page == "create account"}
                 <p class="text-2xl font-bold w-full text-left">{username}</p>
                 <Input
                     fill_width
-                    title="password"
+                    placeholder="password"
                     bind:value={password}
                     type="password"
                 />
                 {#if page == "create account"}
                     <Input
                         fill_width
-                        title="confirm password"
+                        placeholder="confirm password"
                         bind:value={confirmPassword}
                         type="password"
                     />
