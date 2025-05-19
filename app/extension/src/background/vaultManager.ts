@@ -17,13 +17,18 @@ export class VaultManager {
     this.trash = new Vault(undefined);
     this.trash.label = "trash";
   }
-  init(vaultData: VaultData) {
-    for (const data of vaultData.vaults) {
-      let vault = new Vault(data.id);
-      vault.init(data);
-      this.vaults[vault.id] = vault;
+  init(vaultData: VaultData | undefined) {
+    if (vaultData) {
+      for (const data of vaultData.vaults || []) {
+        let vault = new Vault(data.id);
+        vault.init(data);
+        this.vaults[vault.id] = vault;
+      }
+      this.trash.init(vaultData.trash);
     }
-    this.trash.init(vaultData.trash);
+
+    if (Object.values(this.vaults).length > 0) return;
+    this.createVault();
   }
   stringify(): string {
     let object: VaultData = {
@@ -78,9 +83,18 @@ export class VaultManager {
 
     return accounts;
   }
-  find(username: string): Account | undefined {
+  async updateAccount(
+    id: string,
+    updater: (account: Account) => Promise<Account>,
+  ) {
     for (const vault of Object.values(this.vaults)) {
-      let account = vault.find(username);
+      await vault.updateAccount(id, updater);
+    }
+    this.synced = false;
+  }
+  find(username: string, hostname: string): Account | undefined {
+    for (const vault of Object.values(this.vaults)) {
+      let account = vault.find(username, hostname);
       if (account) return account;
     }
     return;
@@ -97,19 +111,23 @@ export class Vault {
     this.id = id || generateId();
     this.accounts = {};
   }
-  init(json: Vault) {
+  init(json: Vault | undefined) {
+    if (!json) return;
     this.id = json.id;
     this.accounts = json.accounts || {};
     this.label = json.label;
   }
-  find(username: string): Account | undefined {
+  find(username: string, hostname: string): Account | undefined {
     for (const account of Object.values(this.accounts)) {
-      if (account.username === username) return account;
+      for (const url of account.urls || []) {
+        if (url.trim() === hostname.trim()) return account;
+      }
     }
     return;
   }
   pushAccount(account: Account) {
     if (account.id === undefined) account.id = generateId();
+    account.urls = account.urls?.map((url) => url.trim());
     this.accounts[account.id] = account;
   }
   async updateAccount(
@@ -118,8 +136,9 @@ export class Vault {
   ) {
     const account: Account | undefined = this.accounts[id];
     if (!account) throw `Account ${id} was not found`;
-    account.id = id;
-    this.accounts[id] = await updater(account);
+    let newAccount = await updater(account);
+    newAccount.id = id;
+    this.accounts[id] = newAccount;
   }
   accountsList(): Account[] {
     return Object.entries(this.accounts).map(([id, account]) => {

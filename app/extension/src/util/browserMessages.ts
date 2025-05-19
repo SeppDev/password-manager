@@ -10,14 +10,10 @@ export class BrowserMessages<T = void> {
   async sendMessage(value: T, tabId?: number) {
     try {
       if (tabId) {
-        browser.tabs
-          .sendMessage(tabId, {
-            channel: this.channel,
-            value,
-          })
-          .catch((error) => {
-            throw `Receiving end for ${this.channel} does not exist`;
-          });
+        browser.tabs.sendMessage(tabId, {
+          channel: this.channel,
+          value,
+        });
         return;
       }
 
@@ -25,20 +21,17 @@ export class BrowserMessages<T = void> {
         const tabs = await browser.tabs.query({});
         tabs.map(async (tab) => {
           if (!tab.id) return;
-          browser.tabs
-            .sendMessage(tab.id, {
-              channel: this.channel,
-              value,
-            })
-            .catch((error) => {
-              throw `Receiving end for ${this.channel} does not exist`;
-            });
+          browser.tabs.sendMessage(tab.id, {
+            channel: this.channel,
+            value,
+          });
         });
       } else {
         await browser.runtime.sendMessage({ channel: this.channel, value });
       }
     } catch {
-      throw `Receiving end for ${this.channel} does not exist`;
+      console.warn(`Failed to send ${value} to ${this.channel}`);
+      // console.warn(`Receiving end for ${this.channel} does not exist`);
     }
   }
 

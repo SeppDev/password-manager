@@ -9,6 +9,7 @@ import { VaultManager } from "./vaultManager";
 import {
   createAccount,
   deleteAccount,
+  editAccount,
   initVault,
   newSavePrompt,
   openSavePrompt,
@@ -37,6 +38,13 @@ createAccount.onMessage((info) => {
   };
 
   vaultManager.pushAccount(info.vault, account);
+});
+editAccount.onMessage(async (info) => {
+  if (!info.id) return;
+
+  await vaultManager?.updateAccount(info.id, async (_) => {
+    return info;
+  });
 });
 
 trashAccount.onMessage((data) => {
@@ -70,18 +78,14 @@ async function initVaultManager() {
   const token = await getToken();
   if (!token) return;
   const userData = await fetchUserData(token);
+
   vaultManager = new VaultManager(token);
-  if (userData) {
-    vaultManager.init(userData);
-    updatePopup();
-    return;
-  }
-  vaultManager.createVault();
+  vaultManager.init(userData);
   updatePopup();
 }
 
 initVault.onMessage(() => {
-  initVaultManager;
+  initVaultManager();
 });
 initVaultManager();
 
@@ -114,7 +118,7 @@ submitSavePrompt.onMessage((shouldSave) => {
   if (!data) throw "No data found";
   checkQueu();
   if (!shouldSave) return;
-  let foundAccount = vaultManager.find(data.inputs.username);
+  let foundAccount = vaultManager.find(data.inputs.username, data.host);
   if (foundAccount) {
     if (data.inputs.password) {
       foundAccount.password = data.inputs.password;
@@ -126,25 +130,25 @@ submitSavePrompt.onMessage((shouldSave) => {
     email: data.inputs.email,
     username: data.inputs.username || data.inputs.text,
     password: data.inputs.password,
-    urls: [data.url],
+    urls: [data.host],
   });
 });
 
 newSavePrompt.onMessage((data) => {
   if (!vaultManager) return;
 
-  let url = new URL(data.url);
-  promptQueu = promptQueu.filter(
-    (d) => new URL(d.url).hostname !== url.hostname,
-  );
+  promptQueu = promptQueu.filter((d) => d.host !== data.host);
+
   data.inputs = {
     email: data.inputs.email,
     username: data.inputs.username || data.inputs.text,
     password: data.inputs.password,
   };
 
-  let exists = vaultManager.find(data.inputs.username) !== undefined;
-  data.edit = exists;
+  let foundAccount = vaultManager.find(data.inputs.username, data.host);
+
+  data.edit = foundAccount !== undefined;
+  if (foundAccount?.password === data.inputs.password) return;
 
   promptQueu.push(data);
   checkQueu();
@@ -160,13 +164,14 @@ async function updateAccountList(tabId: number) {
   let url = new URL(tab.url);
 
   let accounts = vaultManager.getAllAccounts().filter((account) => {
-    let includes = false;
     for (const acc_url of account.urls || []) {
-      if (includes) break;
-      let a_url = new URL(acc_url);
-      includes = a_url.hostname === url.hostname;
+      if (acc_url == url.host) return true;
+
+      try {
+        let a_url = new URL(acc_url);
+        if (a_url.host === url.host) return true;
+      } catch {}
     }
-    return includes;
   });
 
   sendAccountsList.sendMessage(accounts, tab.id);

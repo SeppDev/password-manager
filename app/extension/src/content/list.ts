@@ -134,8 +134,9 @@ observer.observe(document.body, {
 });
 
 function submit() {
+  let url = new URL(document.URL);
   newSavePrompt.sendMessage({
-    url: document.URL,
+    host: url.host,
     inputs,
   });
 }

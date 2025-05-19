@@ -18,7 +18,7 @@
     import type { Component, Snippet } from "svelte";
     import {
         createAccount,
-        deleteAccount,
+        editAccount,
         syncPopup,
         trashAccount,
     } from "../util/channels";
@@ -52,16 +52,6 @@
             window.close();
             return;
         }
-
-        // const userData = await fetchUserData();
-        // if (!userData) {
-        //     authenticate();
-        //     window.close();
-        //     return;
-        // }
-
-        // vaults = userData;
-        // updateVaults();
     }
     main();
 
@@ -76,9 +66,38 @@
         activeOverlays.pop();
     }
 
-    function createItem() {
+    function createItemPrompt() {
         activeOverlays.push(CreateAccount);
     }
+    function openEditAccountPrompt() {
+        activeOverlays.push(EditAccount);
+    }
+
+    async function onAccountEdit(
+        title: string | undefined,
+        email: string | undefined,
+        username: string | undefined,
+        password: string | undefined,
+        urls: string[],
+    ) {
+        if (!selectedAccount) throw "No active account found";
+        if (!selectedAccount.id) throw "No id for account";
+
+        synced = false;
+        let account: Account = {
+            id: selectedAccount.id,
+            title,
+            email,
+            username,
+            password,
+            urls,
+        };
+        selectedAccount = account;
+        editAccount.sendMessage(account);
+        await untilSynced();
+        closeOverlay();
+    }
+
     async function onAccountCreate(
         title: string | undefined,
         email: string | undefined,
@@ -86,9 +105,12 @@
         password: string | undefined,
         urls: string[],
     ) {
-        let vault = $vaults[0].id;
+        const vault = $vaults[0];
+        if (!vault) throw "Failed to find a vault";
+        const vaultId = vault.id;
+
         const info = $state.snapshot({
-            vault,
+            vault: vaultId,
             title,
             email,
             username,
@@ -96,6 +118,7 @@
             urls,
         });
         synced = false;
+
         createAccount.sendMessage(info);
         await untilSynced();
         closeOverlay();
@@ -121,6 +144,14 @@
     <AccountEditor
         mode="create"
         onsave={onAccountCreate}
+        onclose={closeOverlay}
+    />
+{/snippet}
+{#snippet EditAccount()}
+    <AccountEditor
+        mode="edit"
+        account={selectedAccount}
+        onsave={onAccountEdit}
         onclose={closeOverlay}
     />
 {/snippet}
@@ -164,7 +195,7 @@
                 prevent_default
                 compact
                 text="create item"
-                onclick={() => createItem()}
+                onclick={() => createItemPrompt()}
             />
         </header>
         <div class="grow flex-row flex overflow-hidden max-w-full">
@@ -187,6 +218,7 @@
                             onclick={() => {
                                 const id = selectedAccount?.id;
                                 if (!id) return;
+                                openEditAccountPrompt();
                             }}
                             Icon={Pencil}
                             theme="secondary"
@@ -208,6 +240,7 @@
                             compact
                         />
                     </div>
+                    <p class="text-xl font-bold">{selectedAccount.title}</p>
                     {@render AccountDetail("email", selectedAccount?.email)}
                     {@render AccountDetail(
                         "username",
@@ -237,7 +270,7 @@
     value: string | undefined,
     dotted?: boolean,
 )}
-    {#if value !== undefined}
+    {#if value !== undefined && value.length > 0}
         <button
             onclick={() => {
                 navigator.clipboard.writeText(value);
@@ -263,9 +296,13 @@
 {#snippet Account(account: Account)}
     <button
         onclick={() => {
+            if (selectedAccount && selectedAccount.id === account.id) {
+                selectedAccount = undefined;
+                return;
+            }
             selectedAccount = account;
         }}
-        class="min-h-14 bg-neutral-900 px-3 cursor-pointer gap-x-4 hover:bg-neutral-800 duration-200 flex flex-row justify-start items-center"
+        class="min-h-14 overflow-x-hidden bg-neutral-900 px-3 cursor-pointer gap-x-4 hover:bg-neutral-800 duration-200 flex flex-row justify-start items-center"
     >
         <div class="bg-white rounded-full h-3/5 aspect-square"></div>
         <div class="grow-1 flex flex-col items-start">

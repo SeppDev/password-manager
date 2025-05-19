@@ -23,14 +23,11 @@ export const submitSavePrompt = new BrowserMessages<boolean>(
 );
 export const newSavePrompt = new BrowserMessages<PromptData>("newSavePrompt");
 
-export const createAccount = new BrowserMessages<{
-  vault: string;
-  title: string | undefined;
-  email: string | undefined;
-  username: string | undefined;
-  password: string | undefined;
-  urls: string[];
-}>("createAccount");
+export const createAccount = new BrowserMessages<Account & { vault: string }>(
+  "createAccount",
+);
+export const editAccount = new BrowserMessages<Account>("editAccount");
+
 export const trashAccount = new BrowserMessages<{
   account: string;
 }>("trashAccount");
