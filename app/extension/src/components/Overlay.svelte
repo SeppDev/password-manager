@@ -2,6 +2,7 @@
     import type { Component, Snippet } from "svelte";
     import Button from "./Button.svelte";
     import type { FunctionEvent } from "./types";
+    import { StepForward, X } from "@lucide/svelte";
 
     let isClosing = false;
 
@@ -35,7 +36,7 @@
         <div class="w-full flex flex-row space-x-2">
             <p class="text-2xl font-bold w-full">{title}</p>
             <Button
-                text="X"
+                Icon={X}
                 onclick={() => {
                     if (isClosing) return;
                     onclose();
@@ -51,6 +52,7 @@
                 onclick={onsubmit}
                 fill_width
                 type="submit"
+                Icon={StepForward}
                 text={submitText}
             />
         </div>

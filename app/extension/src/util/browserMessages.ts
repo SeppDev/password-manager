@@ -30,7 +30,7 @@ export class BrowserMessages<T = void> {
         await browser.runtime.sendMessage({ channel: this.channel, value });
       }
     } catch {
-      console.warn(`Failed to send ${value} to ${this.channel}`);
+      console.error(`Failed to send ${value} to ${this.channel}`);
       // console.warn(`Receiving end for ${this.channel} does not exist`);
     }
   }

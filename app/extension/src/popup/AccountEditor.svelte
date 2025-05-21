@@ -22,6 +22,7 @@
             email: string | undefined,
             username: string | undefined,
             password: string | undefined,
+            totp: string | undefined,
             urls: string[],
         ) => Promise<void>;
 
@@ -33,6 +34,7 @@
     let email = $state(account?.email);
     let username = $state(account?.username);
     let password = $state(account?.password);
+    let totp = $state(account?.totp);
 
     async function defaultURL(): Promise<string[]> {
         let tabs = await browser.tabs.query({
@@ -57,7 +59,7 @@
     }
 
     async function onsubmit() {
-        await onsave(title, email, username, password, filterDuplicates(urls));
+        await onsave(title, email, username, password, totp, filterDuplicates(urls));
     }
 </script>
 
@@ -93,6 +95,8 @@
                 }}
             />
         </div>
+        <Input compact placeholder="totp" type="text" bind:value={totp} />
+        
         <span class="h-2"></span>
         <div class="w-full gap-2 flex flex-col">
             {#each urls as url, index}
@@ -104,8 +108,9 @@
                         fill_width
                         value={url}
                         onInput={(event) => {
-                          const target = event.target as HTMLInputElement | null;
-                          if (!target) return;
+                            const target =
+                                event.target as HTMLInputElement | null;
+                            if (!target) return;
                             urls[index] = target.value;
                         }}
                     />

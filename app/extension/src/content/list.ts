@@ -1,13 +1,13 @@
 import { mount } from "svelte";
 import InputButton from "./input/InputButton.svelte";
 import tailwindStyles from "../tailwind.css?inline";
-import { writable } from "svelte/store";
 import { newSavePrompt } from "../util/channels";
+import { sleep } from "../util/sleep";
 
 const id = "PASSWORD_MANAGER";
 
 const config = {
-  buttonScale: 0.7,
+  buttonScale: 0.8,
   maxButtonSize: 50,
 
   inputCheckInterval: 500,
@@ -84,7 +84,10 @@ function updateActiveInput() {
 
 const knownElements: Array<HTMLElement> = [];
 
-function handleInput(input: HTMLInputElement) {
+async function handleInput(input: HTMLInputElement) {
+  await sleep(10);
+  if (input.inputMode === "numeric") return;
+
   if (knownElements.includes(input)) return;
   knownElements.push(input);
 
@@ -134,14 +137,18 @@ observer.observe(document.body, {
 });
 
 function submit() {
+  if (!inputs.password) return;
+
   let url = new URL(document.URL);
   newSavePrompt.sendMessage({
     host: url.host,
     inputs,
   });
+  delete inputs.password;
 }
 
 document.addEventListener("submit", submit);
+window.addEventListener("beforeunload", submit);
 document.addEventListener("input", (event) => {
   const target = event.target as HTMLInputElement;
   if (target.tagName !== "INPUT") return;

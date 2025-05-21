@@ -16,6 +16,7 @@ import {
   pollAccountsForSite,
   pollSavePrompt,
   sendAccountsList,
+  sendUsed,
   submitSavePrompt,
   syncPopup,
   trashAccount,
@@ -47,12 +48,22 @@ editAccount.onMessage(async (info) => {
   });
 });
 
+sendUsed.onMessage((data) => {
+  if (!vaultManager) return;
+  let id = data.accountId;
+  let account = vaultManager.getAccountById(data.accountId);
+  if (!account) return;
+  let timestamp = Math.round(new Date().getTime());
+  account.lastUsed = timestamp;
+  vaultManager.synced = false;
+});
+
 trashAccount.onMessage((data) => {
-  vaultManager?.trashAccount(data.account);
+  vaultManager?.trashAccount(data.accountId);
   updatePopup();
 });
 deleteAccount.onMessage((data) => {
-  vaultManager?.deleteAccount(data.account);
+  vaultManager?.deleteAccount(data.accountId);
   updatePopup();
 });
 
@@ -146,6 +157,7 @@ newSavePrompt.onMessage((data) => {
   };
 
   let foundAccount = vaultManager.find(data.inputs.username, data.host);
+  console.log(foundAccount);
 
   data.edit = foundAccount !== undefined;
   if (foundAccount?.password === data.inputs.password) return;
@@ -192,3 +204,19 @@ browser.tabs.onCreated.addListener((tab) => {
   if (!id) return;
   updateAccountList(id);
 });
+
+var getFavicon = function () {
+  var favicon = undefined;
+  var nodeList = document.getElementsByTagName("link");
+  for (var i = 0; i < nodeList.length; i++) {
+    if (
+      nodeList[i].getAttribute("rel") == "icon" ||
+      nodeList[i].getAttribute("rel") == "shortcut icon"
+    ) {
+      favicon = nodeList[i].getAttribute("href");
+    }
+  }
+  return favicon;
+};
+
+console.log(getFavicon());

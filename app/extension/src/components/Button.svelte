@@ -56,7 +56,7 @@
         </span>
     {/if}
     {#if Icon && debounce == false}
-        <span class="aspect-square h-1/2 flex justify-center items-center">
+        <span class="aspect-square h-4/5 flex justify-center items-center">
             <Icon />
         </span>
     {/if}

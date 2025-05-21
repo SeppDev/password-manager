@@ -1,10 +1,5 @@
 <script lang="ts">
-    import {
-        getToken,
-        deleteToken,
-        IsAuthenticated,
-        generateId,
-    } from "../user/userData";
+    import { getToken, deleteToken, IsAuthenticated } from "../user/userData";
     import Loader from "../components/Loader.svelte";
     import type { Account } from "../user/account";
     import Button from "../components/Button.svelte";
@@ -12,10 +7,12 @@
     import { writable, type Writable } from "svelte/store";
     import AccountEditor from "./AccountEditor.svelte";
 
+    import { TOTP } from "totp-generator";
+
     import { Pencil, Trash2 } from "@lucide/svelte";
 
     import type { Vault } from "../background/vaultManager";
-    import type { Component, Snippet } from "svelte";
+    import type { Snippet } from "svelte";
     import {
         createAccount,
         editAccount,
@@ -23,20 +20,52 @@
         trashAccount,
     } from "../util/channels";
     import { sleep } from "../util/sleep";
+    import removeItem from "../util/removeItem";
 
     let page: "loading" | "home" | "error" = $state("loading");
     let { authenticate } = $props();
-    let search = $state("");
 
-    let displayingAccounts: Writable<Account[]> = writable([]);
     let selectedAccount: Account | undefined = $state(undefined);
     let synced = $state(false);
 
+    let searchFilter = $state("");
+    const filteredVaults: Writable<Vault[]> = writable([]);
     const vaults: Writable<Vault[]> = writable([]);
+    function filterVault(vault: Vault): { [key: string]: Account } {
+        let list: Account[] = Object.values(vault.accounts).filter(
+            (account) =>
+                account.username?.includes(searchFilter) ||
+                account.title?.includes(searchFilter) ||
+                account?.urls?.some((url) => url.includes(searchFilter)),
+        );
+
+        let dict: { [key: string]: Account } = {};
+        list.forEach((account) => {
+            if (!account.id) return;
+            dict[account.id] = account;
+        });
+        return dict;
+    }
+    function filter() {
+        let clone = $state.snapshot($vaults) as Vault[];
+        if (searchFilter.length === 0) {
+            filteredVaults.set(clone);
+            return;
+        }
+        filteredVaults.set(
+            clone.map((vault) => {
+                vault.accounts = filterVault(vault);
+                return vault;
+            }),
+        );
+    }
+
+    // Ping the background script
     browser.runtime.connect();
 
     syncPopup.onMessage((v) => {
         vaults.set(v);
+        filter();
         page = "home";
         synced = true;
     });
@@ -78,6 +107,7 @@
         email: string | undefined,
         username: string | undefined,
         password: string | undefined,
+        totp: string | undefined,
         urls: string[],
     ) {
         if (!selectedAccount) throw "No active account found";
@@ -90,6 +120,7 @@
             email,
             username,
             password,
+            totp,
             urls,
         };
         selectedAccount = account;
@@ -103,6 +134,7 @@
         email: string | undefined,
         username: string | undefined,
         password: string | undefined,
+        totp: string | undefined,
         urls: string[],
     ) {
         const vault = $vaults[0];
@@ -115,6 +147,7 @@
             email,
             username,
             password,
+            totp,
             urls,
         });
         synced = false;
@@ -124,20 +157,21 @@
         closeOverlay();
     }
 
-    // let activeAccount: Account | undefined = $state(undefined);
-    // let accounts: Account[] = $state([]);
+    type Notification = {
+        title?: string;
+        description: string;
+    };
 
-    // onMount(async () => {
-    //     const authenticated = await IsAuthenticated();
-    //     page.set(authenticated ? "home" : "login");
-
-    //     async function updateAccounts() {
-    //         const accs = getAccounts();
-    //     }
-    //     browser.storage.onChanged.addListener(updateAccounts);
-    //     updateAccounts();
-    // });
-    // <Button text="logout" onclick={logout} />
+    let notifications: Notification[] = $state([]);
+    function notify(description: string, title?: string) {
+        notifications.push({
+            title,
+            description,
+        });
+        setTimeout(() => {
+            notifications = removeItem(notifications, 0);
+        }, 1000);
+    }
 </script>
 
 {#snippet CreateAccount()}
@@ -161,6 +195,17 @@
         <Loading />
     {:else if page === "home"}
         <div class="w-160 bg-neutral-900 flex flex-col relative">
+            <div class="w-full absolute z-10 bottom-4 pointer-events-none">
+                <div
+                    class="flex justify-end items-center h-full gap-4 flex-col pointer-events-none"
+                >
+                    {#each notifications as notification}
+                        <div class="bg-neutral-800 p-4 rounded-xl">
+                            {notification.description}
+                        </div>
+                    {/each}
+                </div>
+            </div>
             <div class="flex flex-row w-full h-130">
                 {#each activeOverlays as overlay}
                     {@render overlay()}
@@ -189,12 +234,18 @@
         <header
             class="gap-x-2 p-2 flex justify-center items-center center w-full"
         >
-            <Button prevent_default compact text="" />
-            <Input compact placeholder="search" grow value={search} />
+            <!-- <Button prevent_default compact text="" /> -->
+            <Input
+                compact
+                onInput={filter}
+                placeholder="search"
+                grow
+                bind:value={searchFilter}
+            />
             <Button
                 prevent_default
                 compact
-                text="create item"
+                text="create account"
                 onclick={() => createItemPrompt()}
             />
         </header>
@@ -202,7 +253,8 @@
             <div
                 class="flex flex-col overflow-y-auto overlow-x-hidden h-full grow"
             >
-                {#each $vaults as vault}
+                {#each $filteredVaults as vault}
+                    <p class="pl-3 text-lg">{vault.label || "vault"}</p>
                     {#each Object.values(vault.accounts) as account}
                         {@render Account(account)}
                     {/each}
@@ -211,7 +263,7 @@
             {#if selectedAccount}
                 <span class="w-0 border-[1px] border-neutral-600 h-full"></span>
                 <div
-                    class="h-full w-2/3 overflow-y-auto overflow-x-hidden flex flex-col justify-start items-start gap-4 px-4"
+                    class="h-full min-w-2/3 max-w-2/3 overflow-y-auto overflow-x-hidden flex flex-col justify-start items-start gap-4 px-4"
                 >
                     <div class="flex justify-end w-full h-8 gap-2">
                         <Button
@@ -231,7 +283,7 @@
                                 if (!id) return;
                                 selectedAccount = undefined;
                                 trashAccount.sendMessage({
-                                    account: id,
+                                    accountId: id,
                                 });
                             }}
                             Icon={Trash2}
@@ -251,12 +303,35 @@
                         selectedAccount?.password,
                         true,
                     )}
+                    {#if selectedAccount.totp}
+                        {@render AccountDetail(
+                            "totp",
+                            (() => {
+                                if (!selectedAccount?.totp) return;
+                                const { otp, expires } = TOTP.generate(
+                                    selectedAccount?.totp,
+                                );
+                                return otp;
+                            })(),
+                        )}
+                    {/if}
                     <div
                         class="py-2 px-3 outline-1 outline-neutral-500 w-full flex-col rounded-xl"
                     >
                         <p class="text-neutral-500 text-sm">urls</p>
                         {#each selectedAccount.urls || [] as url}
-                            <p>{url}</p>
+                            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+                            <!-- svelte-ignore a11y_click_events_have_key_events -->
+                            <p
+                                class="cursor-pointer text-blue-400"
+                                onclick={() => {
+                                    browser.tabs.create({
+                                        url: `https://${url}`,
+                                    });
+                                }}
+                            >
+                                {url}
+                            </p>
                         {/each}
                     </div>
                 </div>
@@ -273,6 +348,7 @@
     {#if value !== undefined && value.length > 0}
         <button
             onclick={() => {
+                notify(`copied ${title}`);
                 navigator.clipboard.writeText(value);
             }}
             class="outline-1 outline-neutral-500 w-full flex-col flex justify-center items-start rounded-xl py-2 px-3 duration-300 cursor-pointer hover:bg-neutral-800"
@@ -302,9 +378,20 @@
             }
             selectedAccount = account;
         }}
-        class="min-h-14 overflow-x-hidden bg-neutral-900 px-3 cursor-pointer gap-x-4 hover:bg-neutral-800 duration-200 flex flex-row justify-start items-center"
+        class="min-h-14 max-h-14 overflow-x-hidden bg-neutral-900 px-3 cursor-pointer gap-x-4 hover:bg-neutral-800 duration-200 flex flex-row justify-start items-center"
     >
-        <div class="bg-white rounded-full h-3/5 aspect-square"></div>
+        {#if (account.urls || []).length > 0}
+            <img
+                onerror={(event: Event) => {
+                    const target = event.target as HTMLImageElement;
+                    target.style.display = "none";
+                }}
+                src="https://www.google.com/s2/favicons?domain={(account.urls ||
+                    [])[0]}&sz=128"
+                alt="favicon"
+                class="bg-transparent h-3/5 aspect-square"
+            />
+        {/if}
         <div class="grow-1 flex flex-col items-start">
             <p>{account.username || account.email}</p>
             {#if account.urls && account.urls.length > 0}

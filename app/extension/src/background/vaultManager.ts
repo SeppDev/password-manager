@@ -74,6 +74,13 @@ export class VaultManager {
     this.synced = false;
     this.trash.removeAccount(id);
   }
+  getAccountById(accountId: string): Account | undefined {
+    for (const vault of Object.values(this.vaults)) {
+      const account = vault.accounts[accountId];
+      if (account) return account;
+    }
+    return;
+  }
   getAllAccounts(): Account[] {
     let accounts: Account[] = [];
 
@@ -120,6 +127,7 @@ export class Vault {
   find(username: string, hostname: string): Account | undefined {
     for (const account of Object.values(this.accounts)) {
       for (const url of account.urls || []) {
+        if (account.username !== username) continue;
         if (url.trim() === hostname.trim()) return account;
       }
     }

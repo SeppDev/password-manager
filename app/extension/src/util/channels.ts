@@ -29,9 +29,13 @@ export const createAccount = new BrowserMessages<Account & { vault: string }>(
 export const editAccount = new BrowserMessages<Account>("editAccount");
 
 export const trashAccount = new BrowserMessages<{
-  account: string;
+  accountId: string;
 }>("trashAccount");
 
 export const deleteAccount = new BrowserMessages<{
-  account: string;
+  accountId: string;
 }>("deleteAccount");
+
+export const sendUsed = new BrowserMessages<{
+  accountId: string;
+}>("sendUsed");

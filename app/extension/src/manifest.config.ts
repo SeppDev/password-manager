@@ -32,10 +32,6 @@ export default defineManifest(async () => ({
       run_at: "document_end",
       js: ["src/content/save.ts"],
     },
-    {
-      matches: [`${config.register_page}`],
-      js: ["src/content/getToken.ts"],
-    },
   ],
   background: {
     scripts: ["src/background/index.ts"],
