@@ -28,7 +28,7 @@
         isClosing = true;
         onsubmit;
     }}
-    class="size-full z-100 bg-black/50 absolute flex justify-center items-center p-6"
+    class="size-full z-100 bg-black/50 absolute flex justify-center items-center p-3"
 >
     <div
         class="min-w-10 min-h-10 max-w-full max-h-full p-4 bg-neutral-800 rounded-xl flex flex-col gap-4"

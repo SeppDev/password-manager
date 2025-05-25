@@ -254,7 +254,7 @@
                 class="flex flex-col overflow-y-auto overlow-x-hidden h-full grow"
             >
                 {#each $filteredVaults as vault}
-                    <p class="pl-3 text-lg">{vault.label || "vault"}</p>
+                    <p class="pl-3 text-lg">{vault.label}</p>
                     {#each Object.values(vault.accounts) as account}
                         {@render Account(account)}
                     {/each}

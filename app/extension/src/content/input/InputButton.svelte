@@ -12,6 +12,7 @@
     } from "../../util/channels";
     import { randomPassword } from "../../util/crypto";
     import Button from "../../components/Button.svelte";
+    import Logo from "../../assets/icons/logo.png";
 
     type Page = "loading" | "notsigned" | "home";
 
@@ -41,10 +42,10 @@
 <div class="absolute z-10 w-full h-full not-dark:text-black dark:text-white">
     <button
         onclick={(_) => clicked()}
-        class="w-full h-full dark:text-dark not-dark:text-white flex justify-center items-center duration-200 bg-blue-600 rounded-full cursor-pointer stroke-white dark:stroke-black dark:hover:bg-blue-500 not-dark:hover:bg-blue-800"
+        class="w-full h-full flex justify-center items-center cursor-pointer"
         aria-label=" "
     >
-        <KeyRound class="h-3/5 text-black" />
+        <img src={Logo} alt="logo" />
     </button>
 
     <div class="h-1"></div>

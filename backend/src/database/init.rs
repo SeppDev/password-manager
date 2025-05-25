@@ -11,7 +11,7 @@ impl Database {
     pub async fn test_init_connection(&self) {
         let query = format!(
             "
-            DROP TABLE IF EXISTS {USERS_TABLE};
+            DROP TABLE IF EXISTS TEST_{USERS_TABLE};
         "
         );
         self.execute(query).await.unwrap();
@@ -38,7 +38,6 @@ impl Database {
             CREATE TABLE IF NOT EXISTS {vault} (
               id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
               user_id BIGINT REFERENCES {users}(id) ON DELETE CASCADE,
-              updated_at TIMESTAMPTZ DEFAULT now(),
               data BYTEA
             );
 

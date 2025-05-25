@@ -1,9 +1,7 @@
 import config from "../config";
 import { randomString } from "../util/crypto";
-import type { Account } from "./account";
 
-// Change to memory on release
-const storage = browser.storage.local;
+const storage = browser.storage.session;
 
 export function generateId(): string {
   return randomString(12);

@@ -19,7 +19,7 @@ export default defineManifest(async () => ({
   version: `${major}.${minor}.${patch}`,
   version_name: version,
   icons: {
-    "128": "src/assets/icons/icon-128.png",
+    "128": "src/assets/icons/logo.png",
   },
   content_scripts: [
     {
@@ -43,7 +43,7 @@ export default defineManifest(async () => ({
   action: {
     default_popup: "src/popup/popup.html",
     default_icon: {
-      "128": "src/assets/icons/icon-128.png",
+      "128": "src/assets/icons/logo.png",
     },
   },
   // web_accessible_resources: ["src/tailwind.css"],
