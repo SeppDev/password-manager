@@ -44,19 +44,3 @@ export async function IsAuthenticated(token?: string): Promise<boolean> {
 
   return response.status === 200;
 }
-
-// export async function syncUserData(): Promise<boolean> {
-//   const token = await getToken();
-//   if (!token) return false;
-
-//   const response = await fetch(`${config.api}/userdata`, {
-//     headers: {
-//       token,
-//     },
-//   });
-
-//   const text = await response.text();
-//   console.log(text);
-
-//   return true;
-// }

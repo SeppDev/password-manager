@@ -19,7 +19,7 @@
         $state("continue");
 
     (async () => {
-        const data = await browser.storage.local.get(["username", "password"]);
+        const data = await browser.storage.session.get(["username", "password"]);
         if (data.username) {
             username = data.username;
             page = "login";
@@ -43,7 +43,7 @@
         errorMessage = response.message;
         if (!response.token) return;
 
-        browser.storage.local.set({ username, password });
+        browser.storage.session.set({ username, password });
 
         await setToken(response.token);
         page = "done";

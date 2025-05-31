@@ -29,6 +29,7 @@
     let synced = $state(false);
 
     let searchFilter = $state("");
+    
     const filteredVaults: Writable<Vault[]> = writable([]);
     const vaults: Writable<Vault[]> = writable([]);
     function filterVault(vault: Vault): { [key: string]: Account } {

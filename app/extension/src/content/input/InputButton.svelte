@@ -17,7 +17,7 @@
     type Page = "loading" | "notsigned" | "home";
 
     let visible = $state(false);
-    let page: Page = $state("loading");
+    let page: Page = $state("home");
 
     let accounts: Account[] = $state([]);
     function clicked() {

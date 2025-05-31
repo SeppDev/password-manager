@@ -1,7 +1,6 @@
-import type { Vault, VaultData } from "../background/vaultManager";
+import type { VaultData } from "../background/vaultManager";
 import config from "../config";
-import type { Account } from "../user/account";
-import { generateId, getEncryptionPassword, getToken } from "../user/userData";
+import { getEncryptionPassword, getToken } from "../user/userData";
 import { decrypt, encrypt } from "./crypto";
 
 export async function fetchUserData(
@@ -37,7 +36,7 @@ export async function updateUserData(vault: string) {
   let encrypted = await encrypt(password, vault);
   let data = btoa(encrypted);
 
-  const response = await fetch(`${config.api}/userdata`, {
+  await fetch(`${config.api}/userdata`, {
     method: "post",
     headers: {
       token,

@@ -1,7 +1,5 @@
-import { writable, type Writable } from "svelte/store";
 import type { Account } from "../user/account";
 import { fetchUserData, updateUserData } from "../util/api";
-import { BrowserMessages } from "../util/browserMessages";
 import { sleep } from "../util/sleep";
 import { generateId, getToken } from "../user/userData";
 import "./vaultManager";
@@ -21,7 +19,7 @@ import {
   syncPopup,
   trashAccount,
 } from "../util/channels";
-import type { Inputs, PromptData } from "../components/types";
+import type { PromptData } from "../components/types";
 
 let vaultManager: VaultManager | undefined = undefined;
 let connected = false;

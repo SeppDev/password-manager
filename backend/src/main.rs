@@ -31,9 +31,10 @@ async fn rocket() -> _ {
                 continue;
             }
         };
-        db.init_connection().await;
-
-        break db;
+        match db.init_connection().await {
+            Ok(_result) => break db,
+            Err(e) => eprintln!("{e}"),
+        };
     };
 
     let mut config = Config::default();
