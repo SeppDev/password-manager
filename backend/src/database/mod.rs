@@ -17,9 +17,15 @@ pub mod db {
     pub type QueryResult<T = PgQueryResult> = sqlx::Result<T, sqlx::Error>;
 }
 
+#[cfg(not(test))]
 pub mod config {
     pub const USERS_TABLE: &str = "users";
     pub const VAULT_TABLE: &str = "vaults";
+}
+#[cfg(test)]
+pub mod config {
+    pub const USERS_TABLE: &str = "temp_users";
+    pub const VAULT_TABLE: &str = "temp_vaults";
 }
 
 use db::*;
@@ -29,11 +35,12 @@ use crate::jwt::JWTSession;
 pub mod accounts;
 pub mod init;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UserClaims {
     pub user_id: i64,
 }
 
+#[allow(unused)]
 pub enum DBPool {
     Normal(Pool<DBSolution>),
     Testing(Arc<Mutex<Transaction<'static, DBSolution>>>),
@@ -45,22 +52,6 @@ pub struct Database {
 }
 
 impl Database {
-    #[cfg(test)]
-    pub async fn test(url: &str) -> Result<Self> {
-        let pool = PoolOptions::new()
-            .test_before_acquire(true)
-            .connect(&url)
-            .await?;
-
-        // let transaction = Box::new(pool.begin().await?);
-        let transaction = Arc::new(Mutex::new(pool.begin().await?));
-
-        Ok(Self {
-            pool: DBPool::Testing(transaction),
-            jwt: JWTSession::new(),
-        })
-    }
-
     pub async fn open(url: &str) -> Result<Self> {
         let pool = PoolOptions::new()
             .test_before_acquire(true)
@@ -108,7 +99,7 @@ impl Database {
 
         T::from_row(&row)
     }
-    
+
     pub async fn query(&self, query: &str) -> QueryResult {
         #[allow(unused_mut)]
         let mut executor = self.executor().await;

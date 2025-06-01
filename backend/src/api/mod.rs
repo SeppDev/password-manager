@@ -14,12 +14,6 @@ use serde_json::json;
 mod response;
 use response::{ApiResponse, ApiResult};
 
-// impl<T> Into<sqlx::Result<T>> for sqlx::Result<T, ApiResponse> {
-//     fn into(self) -> sqlx::Result<T> {
-//         todo!()
-//     }
-// }
-
 #[post("/signup")]
 pub async fn signup<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResult {
     let (username, password) = creds.may_fail()?;
@@ -28,21 +22,21 @@ pub async fn signup<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResu
         Ok(_) => return ApiResponse::ok_message("Account already exists").into(),
         Err(err) => match err {
             sqlx::Error::RowNotFound => {}
-            _ => return ApiResponse::ok_message(err.to_string()).into(),
+            _ => return ApiResponse::ok_message(&err.to_string()).into(),
         },
     };
 
     let _result = match db.create_account(&username, password).await {
         Ok(r) => r,
-        Err(err) => return ApiResponse::err_message(err.to_string()).into(),
+        Err(err) => return ApiResponse::err_message(&err.to_string()).into(),
     };
 
     let user = match db.get_user_by_name(&username).await {
         Ok(u) => u,
-        Err(err) => return ApiResponse::err_message(err.to_string()).into(),
+        Err(err) => return ApiResponse::err_message(&err.to_string()).into(),
     };
 
-    let token = db.create_session(user.id);
+    let token = db.create_token(user.id);
     let json = json!({"token": token});
 
     ApiResponse::Ok(json.to_string()).into()
@@ -57,7 +51,7 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
         Err(err) => {
             return match err {
                 sqlx::Error::RowNotFound => ApiResponse::ok_message("User not found"),
-                _ => ApiResponse::err_message(err.to_string()),
+                _ => ApiResponse::err_message(&err.to_string()),
             }
             .into();
         }
@@ -72,8 +66,8 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
         return ApiResponse::ok_message("Wrong password").into();
     }
 
-    let token = db.create_session(user.id);
-    ApiResponse::ok_key_value("token", token).into()
+    let token = db.create_token(user.id);
+    ApiResponse::ok_key_value("token", &token).into()
 }
 
 #[get("/userdata")]

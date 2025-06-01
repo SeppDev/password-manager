@@ -22,7 +22,7 @@ impl<T: Serialize + DeserializeOwned> JWTSession<T> {
             private_key,
         }
     }
-    pub fn create_session(&self, claims: T) -> Result<String, Error> {
+    pub fn create_token(&self, claims: T) -> Result<String, Error> {
         let key_pair = Key::from_pem(&self.private_key)?;
         let claims = Claims::with_custom_claims(claims, Duration::from_hours(12));
         key_pair.sign(claims)

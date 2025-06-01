@@ -1,10 +1,6 @@
-use sqlx::postgres::PgQueryResult;
 use std::fmt::Debug;
 
-use argon2::{
-    Argon2,
-    password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
-};
+use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
 
 use super::config::{USERS_TABLE, VAULT_TABLE};
 use super::{Database, UserClaims};
@@ -22,13 +18,21 @@ pub struct User {
 }
 
 impl Database {
-    pub async fn create_account(
-        &self,
-        name: &str,
-        password: &str,
-    ) -> super::QueryResult {
+    pub async fn create_account(&self, name: &str, password: &str) -> super::QueryResult {
         let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
+
+        #[cfg(test)]
+        let params = argon2::Params::new(8, 1, 1, None).unwrap();
+        #[cfg(test)]
+        let argon2 = argon2::Argon2::new(
+            argon2::Algorithm::default(),
+            argon2::Version::default(),
+            params,
+        );
+
+        #[cfg(not(test))]
+        let argon2 = argon2::Argon2::default();
+
         let password = password.as_bytes();
         let password_hash = argon2.hash_password(password, &salt).unwrap().to_string();
 
@@ -48,8 +52,8 @@ impl Database {
 
         self.execute(query).await
     }
-    pub fn create_session(&self, user_id: i64) -> String {
-        self.jwt.create_session(UserClaims { user_id }).unwrap()
+    pub fn create_token(&self, user_id: i64) -> String {
+        self.jwt.create_token(UserClaims { user_id }).unwrap()
     }
     pub fn get_session(&self, token: &str) -> Option<UserClaims> {
         match self.jwt.get_claims(token) {
