@@ -17,12 +17,11 @@ export async function fetchUserData(
   });
   if (response.status !== 200) return;
 
-  let text = await response.text();
-  if (text.length === 0) return;
+  let data = await response.text();
+  if (data.length === 0) return;
 
-  let encryptedData = atob(text);
 
-  let decrypted = await decrypt(password, encryptedData);
+  let decrypted = await decrypt(password, data);
   return JSON.parse(decrypted);
 }
 
@@ -34,13 +33,12 @@ export async function updateUserData(vault: string) {
   if (!password) return;
 
   let encrypted = await encrypt(password, vault);
-  let data = btoa(encrypted);
 
   await fetch(`${config.api}/userdata`, {
     method: "post",
     headers: {
       token,
-      data,
     },
+    body: encrypted
   });
 }

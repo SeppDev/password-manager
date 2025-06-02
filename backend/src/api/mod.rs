@@ -1,5 +1,4 @@
 use crate::database::{Database, UserClaims, accounts::User};
-use base64::{Engine, prelude::BASE64_STANDARD};
 use rocket::State;
 
 use argon2::{
@@ -8,7 +7,7 @@ use argon2::{
 };
 
 mod accounts;
-use accounts::{SignupCreds, UserData};
+use accounts::SignupCreds;
 use serde_json::json;
 
 mod response;
@@ -19,10 +18,10 @@ pub async fn signup<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResu
     let (username, password) = creds.may_fail()?;
 
     match db.get_user_by_name(&username).await {
-        Ok(_) => return ApiResponse::ok_message("Account already exists").into(),
+        Ok(_) => return ApiResponse::err_message("Account already exists").into(),
         Err(err) => match err {
             sqlx::Error::RowNotFound => {}
-            _ => return ApiResponse::ok_message(&err.to_string()).into(),
+            _ => return ApiResponse::err_message(&err.to_string()).into(),
         },
     };
 
@@ -50,7 +49,7 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
         Ok(u) => u,
         Err(err) => {
             return match err {
-                sqlx::Error::RowNotFound => ApiResponse::ok_message("User not found"),
+                sqlx::Error::RowNotFound => ApiResponse::err_message("User not found"),
                 _ => ApiResponse::err_message(&err.to_string()),
             }
             .into();
@@ -63,7 +62,7 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
         .is_ok();
 
     if !correct_password {
-        return ApiResponse::ok_message("Wrong password").into();
+        return ApiResponse::err_message("Wrong password").into();
     }
 
     let token = db.create_token(user.id);
@@ -71,19 +70,15 @@ pub async fn login<'r>(db: &State<Database>, creds: SignupCreds<'r>) -> ApiResul
 }
 
 #[get("/userdata")]
-pub async fn user_data<'r>(db: &State<Database>, user: User) -> String {
+pub async fn user_data<'r>(db: &State<Database>, user: User) -> Vec<u8> {
     let vault = db.get_user_data(user.id).await.unwrap();
-    BASE64_STANDARD.encode(vault.data.unwrap_or_default())
+    // BASE64_STANDARD.encode(vault.data.unwrap_or_default())
+    vault.data.unwrap_or_default()
 }
 
-#[post("/userdata")]
-pub async fn update_user_data<'r>(
-    db: &State<Database>,
-    user: User,
-    input: UserData,
-) -> ApiResponse {
-    let bytes = BASE64_STANDARD.decode(input.0).unwrap();
-    db.set_user_data(user.id, &bytes).await.unwrap();
+#[post("/userdata", data = "<data>")]
+pub async fn update_user_data<'r>(db: &State<Database>, user: User, data: Vec<u8>) -> ApiResponse {
+    db.set_user_data(user.id, &data).await.unwrap();
 
     ApiResponse::NoContent(())
 }
@@ -91,7 +86,7 @@ pub async fn update_user_data<'r>(
 #[get("/user/exists/<username>")]
 pub async fn user_exists<'r>(db: &State<Database>, username: &str) -> ApiResponse {
     if !username.is_ascii() {
-        return ApiResponse::ok_message("Username must only contain valid ascii characters");
+        return ApiResponse::err_message("Username must only contain valid ascii characters");
     }
 
     match db.get_user_by_name(username).await {

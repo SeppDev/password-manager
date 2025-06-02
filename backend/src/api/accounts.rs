@@ -45,17 +45,21 @@ impl<'r> FromRequest<'r> for SignupCreds<'r> {
         };
 
         if !username.is_ascii() {
-            return Outcome::Success(Self::Err(ApiResponse::ok_message(
+            return Outcome::Success(Self::Err(ApiResponse::err_message(
                 "Username must only contain valid ascii characters",
             )));
         }
 
         if username.len() < 3 || username.len() > 20 {
-            return Outcome::Success(Self::Err(ApiResponse::ok_message(
-                "Username must be between 3 and 20 characters long",
+            return Outcome::Success(Self::Err(ApiResponse::err_message(
+                "Username must be between 3 and 20 characters",
             )));
-        } else if password.len() < 8 {
-            return Outcome::Success(Self::Err(ApiResponse::ok_message("Password is too short")));
+        }
+
+        if password.len() < 8 || password.len() > 100 {
+            return Outcome::Success(Self::Err(ApiResponse::err_message(
+                "Username must be between 8 and 100 characters",
+            )));
         }
 
         Outcome::Success(Self::Info { username, password })
@@ -116,16 +120,16 @@ impl<'r> FromRequest<'r> for UserClaims {
     }
 }
 
-pub struct UserData(pub String);
+// pub struct UserData(pub String);
 
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for UserData {
-    type Error = ();
+// #[rocket::async_trait]
+// impl<'r> FromRequest<'r> for UserData {
+//     type Error = ();
 
-    async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
-        match req.headers().get("data").next() {
-            Some(t) => Outcome::Success(UserData(t.to_string())),
-            None => Outcome::Error((Status::InternalServerError, ())),
-        }
-    }
-}
+//     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+//         match req.headers().get("data").next() {
+//             Some(t) => Outcome::Success(UserData(t.to_string())),
+//             None => Outcome::Error((Status::InternalServerError, ())),
+//         }
+//     }
+// }

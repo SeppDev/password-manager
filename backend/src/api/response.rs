@@ -25,7 +25,7 @@ impl ApiResponse {
     pub fn ok_key_value(key: &str, value: &str) -> ApiResponse {
         Self::Ok(Self::key_value(key, value))
     }
-    pub fn ok_message(body: &str) -> ApiResponse {
+    pub fn _ok_message(body: &str) -> ApiResponse {
         Self::Ok(Self::message_string(body))
     }
     pub fn err_message(body: &str) -> ApiResponse {
